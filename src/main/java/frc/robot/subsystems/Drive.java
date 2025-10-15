@@ -55,15 +55,12 @@ public class Drive extends SubsystemBase {
     }
 
     public void drive(double x, double y, double theta, boolean isFieldOriented) {
-        double xSpeed = MAX_LINEAR_SPEED*x;
-        double ySpeed = MAX_LINEAR_SPEED*y;
-        double thetaSpeed = MAX_ANGULAR_SPEED*theta;
 
         if(isFieldOriented) {
-            drive(ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, thetaSpeed, gyro.getRotation2d()));
+            drive(ChassisSpeeds.fromFieldRelativeSpeeds(x, y, theta, gyro.getRotation2d()));
         }
         else {
-            drive(new ChassisSpeeds(xSpeed, ySpeed, thetaSpeed));
+            drive(new ChassisSpeeds(x, y, theta));
         }
         
     }

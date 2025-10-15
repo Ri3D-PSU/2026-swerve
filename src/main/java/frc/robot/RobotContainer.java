@@ -1,5 +1,6 @@
 package frc.robot;
 
+import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Module;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -10,6 +11,8 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class RobotContainer {
 
+  private static final double MAX_LINEAR_SPEED = Units.feetToMeters(17.2);
+  private static final double MAX_ANGULAR_SPEED = Math.PI;
   private final Drive drive = new Drive();
 
 
@@ -33,9 +36,9 @@ public class RobotContainer {
   private void configureBindings() {
     drive.setDefaultCommand(
       new RunCommand(() -> drive.drive(
-        m_driverController.getLeftX(), 
-        m_driverController.getLeftY(), 
-        m_driverController.getRightY(), 
+        Math.pow(m_driverController.getLeftX(), 2)*MAX_LINEAR_SPEED,
+              Math.pow(m_driverController.getLeftY(), 2)*MAX_LINEAR_SPEED,
+              Math.pow(m_driverController.getRightX(), 2)*MAX_ANGULAR_SPEED,
         true)));
 
   }
