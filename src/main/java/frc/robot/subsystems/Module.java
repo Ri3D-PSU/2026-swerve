@@ -21,6 +21,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotContainer;
 
 public class Module {
 
@@ -36,18 +37,22 @@ public class Module {
 
   public Module(int corner) {
     switch(corner) {
-      case 0:
-        drivingSparkMax = new SparkMax(0, MotorType.kBrushless);
-        turningSparkMax = new SparkMax(0, MotorType.kBrushless);
-      case 1:
-        drivingSparkMax = new SparkMax(0, MotorType.kBrushless);
-        turningSparkMax = new SparkMax(0, MotorType.kBrushless);
-      case 2:
-        drivingSparkMax = new SparkMax(0, MotorType.kBrushless);
-        turningSparkMax = new SparkMax(0, MotorType.kBrushless);
-      case 3:
-        drivingSparkMax = new SparkMax(0, MotorType.kBrushless);
-        turningSparkMax = new SparkMax(0, MotorType.kBrushless);
+      case 0 -> {
+        drivingSparkMax = new SparkMax(19, MotorType.kBrushless);
+        turningSparkMax = new SparkMax(18, MotorType.kBrushless);
+      }
+      case 1 -> {
+        drivingSparkMax = new SparkMax(29, MotorType.kBrushless);
+        turningSparkMax = new SparkMax(28, MotorType.kBrushless);
+      }
+      case 2 -> {
+        drivingSparkMax = new SparkMax(11, MotorType.kBrushless);
+        turningSparkMax = new SparkMax(12, MotorType.kBrushless);
+      }
+      case 3 -> {
+        drivingSparkMax = new SparkMax(21, MotorType.kBrushless);
+        turningSparkMax = new SparkMax(22, MotorType.kBrushless);
+      }
     }
     
     drivingEncoder = drivingSparkMax.getEncoder();
@@ -63,7 +68,7 @@ public class Module {
       .voltageCompensation(12);
 
     drivingConfig.closedLoop
-      .pidf(0, 0, 0, 0)
+      .pidf(0, 0, 0, 0.187)
       .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
       .outputRange(-1, 1);
 

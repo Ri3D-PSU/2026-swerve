@@ -42,7 +42,6 @@ public class Drive extends SubsystemBase {
         kinematics = new SwerveDriveKinematics(modulePositions);
 
         gyro = new AHRS(NavXComType.kMXP_SPI);
-        
 
     }
 

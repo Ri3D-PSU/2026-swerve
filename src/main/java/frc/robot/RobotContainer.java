@@ -11,8 +11,8 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class RobotContainer {
 
-  private static final double MAX_LINEAR_SPEED = Units.feetToMeters(17.2);
-  private static final double MAX_ANGULAR_SPEED = Math.PI;
+  public static final double MAX_LINEAR_SPEED = Units.feetToMeters(17.2);
+  public static final double MAX_ANGULAR_SPEED = Math.PI;
   private final Drive drive = new Drive();
 
 
@@ -36,10 +36,10 @@ public class RobotContainer {
   private void configureBindings() {
     drive.setDefaultCommand(
       new RunCommand(() -> drive.drive(
-        Math.pow(m_driverController.getLeftX(), 2)*MAX_LINEAR_SPEED,
-              Math.pow(m_driverController.getLeftY(), 2)*MAX_LINEAR_SPEED,
-              Math.pow(m_driverController.getRightX(), 2)*MAX_ANGULAR_SPEED,
-        true)));
+        Math.abs(m_driverController.getLeftX())*m_driverController.getLeftX()*MAX_LINEAR_SPEED,
+              Math.abs(m_driverController.getLeftY())*m_driverController.getLeftY()*MAX_LINEAR_SPEED,
+              Math.abs(m_driverController.getRightX())*m_driverController.getRightX()*MAX_ANGULAR_SPEED,
+        true), drive));
 
   }
 
