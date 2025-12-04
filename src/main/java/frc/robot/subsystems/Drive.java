@@ -59,7 +59,7 @@ public class Drive extends SubsystemBase {
         };
 
         kinematics = new SwerveDriveKinematics(moduleLocations);
-        poseEstimator = new SwerveDrivePoseEstimator(kinematics, getGyroRotation(), getModulePositions(), new Pose2d());
+        poseEstimator = new SwerveDrivePoseEstimator(kinematics, gyro.getRotation2d(), getModulePositions(), new Pose2d());
     }
 
 
@@ -88,7 +88,7 @@ public class Drive extends SubsystemBase {
             var visionStd = calculateVisionStd(megaTag2VisionPose);
 
             var newVisionPose = megaTag2VisionPose.pose;
-            if (visionStd.get(0, 3) < 10.0) {
+            if (visionStd.get(2, 0) < 10.0) {
                 // let's use the megatag1 rotation to update our gyro angle
                 newVisionPose = new Pose2d(
                         megaTag2VisionPose.pose.getTranslation(),
@@ -102,6 +102,7 @@ public class Drive extends SubsystemBase {
 
         }
         Logger.recordOutput("Last Vision Update", lastVisionTimestamp);
+        Logger.recordOutput("Fused Pose", poseEstimator.getEstimatedPosition());
 
         field.setRobotPose(poseEstimator.getEstimatedPosition()); // Logs the position for advantagekit
     }
@@ -137,7 +138,7 @@ public class Drive extends SubsystemBase {
 
 
     public Rotation2d getGyroRotation() {
-        return gyro.getRotation2d().times(-1);
+        return poseEstimator.getEstimatedPosition().getRotation();
     }
 
     /**
