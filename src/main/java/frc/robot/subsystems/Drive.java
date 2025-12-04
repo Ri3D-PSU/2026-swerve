@@ -82,10 +82,7 @@ public class Drive extends SubsystemBase {
         var megaTag2VisionPose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(LIMELIGHT_NAME);
         var megaTag1VisionPose = LimelightHelpers.getBotPoseEstimate_wpiBlue(LIMELIGHT_NAME);
 
-        Logger.recordOutput("MegaTag2Pose", megaTag2VisionPose.pose);
-        Logger.recordOutput("MegaTag1Pose", megaTag1VisionPose.pose);
-
-        if (megaTag2VisionPose.timestampSeconds != lastVisionTimestamp && megaTag2VisionPose.tagCount > 0) {
+        if (megaTag2VisionPose != null && megaTag1VisionPose != null && megaTag2VisionPose.timestampSeconds != lastVisionTimestamp && megaTag2VisionPose.tagCount > 0) {
             lastVisionTimestamp = megaTag2VisionPose.timestampSeconds;
             Logger.recordOutput("LimelightPose", megaTag2VisionPose.pose);
             var visionStd = calculateVisionStd(megaTag2VisionPose);
@@ -99,6 +96,10 @@ public class Drive extends SubsystemBase {
                 );
             }
             poseEstimator.addVisionMeasurement(newVisionPose, megaTag2VisionPose.timestampSeconds, visionStd);
+
+            Logger.recordOutput("MegaTag2Pose", megaTag2VisionPose.pose);
+            Logger.recordOutput("MegaTag1Pose", megaTag1VisionPose.pose);
+
         }
         Logger.recordOutput("Last Vision Update", lastVisionTimestamp);
 
