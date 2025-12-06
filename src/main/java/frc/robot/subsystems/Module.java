@@ -114,4 +114,8 @@ public class Module {
     }
 
 
+    public void setIdleMode(IdleMode idleMode) {
+
+    }
+
 }

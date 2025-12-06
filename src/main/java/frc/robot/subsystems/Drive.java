@@ -1,13 +1,20 @@
 package frc.robot.subsystems;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.config.ModuleConfig;
+import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.controllers.PPLTVController;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.revrobotics.spark.config.SparkBaseConfig;
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.controller.HolonomicDriveController;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -23,6 +30,8 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.LimelightHelpers;
 import org.littletonrobotics.junction.Logger;
@@ -71,7 +80,7 @@ public class Drive extends SubsystemBase {
             config = RobotConfig.fromGUISettings();
         } catch (Exception e) {
             // Handle exception as needed
-            config = null; //TODO: Fix
+            throw new RuntimeException(e);
         }
 
         // Configure AutoBuilder last
@@ -80,7 +89,10 @@ public class Drive extends SubsystemBase {
                 this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
                 this::getRobotRelativeSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
                 (speeds, feedforwards) -> drive(speeds), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
-                new PPLTVController(0.02), // PPLTVController is the built in path following controller for differential drive trains
+                new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
+                        new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
+                        new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
+                ),
                 config, // The robot configuration
                 () -> {
                     // Boolean supplier that controls when the path will be mirrored for the red alliance
@@ -135,6 +147,9 @@ public class Drive extends SubsystemBase {
     }
 
 
+    /**
+     * @param speeds robot relative speeds
+     */
     public void drive(ChassisSpeeds speeds) {
         ChassisSpeeds.discretize(speeds, TICK_TIME);
         SwerveModuleState[] states = kinematics.toSwerveModuleStates(speeds);
@@ -190,6 +205,31 @@ public class Drive extends SubsystemBase {
         return kinematics.toChassisSpeeds(getSwerveModuleStates());
     }
 
+    public ChassisSpeeds getFieldRelativeSpeeds() {
+        return ChassisSpeeds.fromRobotRelativeSpeeds(getRobotRelativeSpeeds(), getGyroRotation());
+    }
+
+    PIDController positionTranslationPid = new PIDController(5.0, 0.0, 0.0);
+
+    PIDController positionRotationPid = new PIDController(5.0, 0.0, 0.0);
+
+    {
+        positionRotationPid.enableContinuousInput(0, Units.degreesToRadians(360.0));
+    }
+
+    public Command pidToPosition(Pose2d goal) {
+        return Commands.run(
+                () -> drive(
+                        positionTranslationPid.calculate(getPose().getX(), goal.getX()),
+                        positionTranslationPid.calculate(getPose().getY(), goal.getY()),
+                        positionRotationPid.calculate(getPose().getRotation().getRadians(), goal.getRotation().getRadians()),
+                        true
+                ),
+                this
+        );
+    }
+
+
     /**
      * Precondition: visionPose.rawFiducials.length > 0
      *
@@ -220,4 +260,10 @@ public class Drive extends SubsystemBase {
         return new Matrix<>(Nat.N3(), Nat.N1(), new double[]{positionStd, positionStd, rotationStd});
     }
 
+    public void setBrakeMode(SparkBaseConfig.IdleMode idleMode) {
+        frontLeftModule.setIdleMode(idleMode);
+        frontRightModule.setIdleMode(idleMode);
+        backLeftModule.setIdleMode(idleMode);
+        backRightModule.setIdleMode(idleMode);
+    }
 }
