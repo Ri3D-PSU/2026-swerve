@@ -16,4 +16,5 @@ import static edu.wpi.first.units.Units.Meters;
  */
 public final class Constants {
     public static String LIMELIGHT_NAME = "limelight";
+    public static double TICK_TIME = 20.0 / 1000.0; // 20ms
 }

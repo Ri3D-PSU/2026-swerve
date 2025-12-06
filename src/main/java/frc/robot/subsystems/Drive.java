@@ -1,5 +1,9 @@
 package frc.robot.subsystems;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.ModuleConfig;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPLTVController;
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 import edu.wpi.first.math.Matrix;
@@ -17,13 +21,14 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.LimelightHelpers;
 import org.littletonrobotics.junction.Logger;
 import org.opencv.core.Mat;
 
-import static frc.robot.Constants.LIMELIGHT_NAME;
+import static frc.robot.Constants.*;
 
 public class Drive extends SubsystemBase {
     private final Module frontLeftModule;
@@ -60,18 +65,40 @@ public class Drive extends SubsystemBase {
 
         kinematics = new SwerveDriveKinematics(moduleLocations);
         poseEstimator = new SwerveDrivePoseEstimator(kinematics, gyro.getRotation2d(), getModulePositions(), new Pose2d());
+
+        RobotConfig config;
+        try {
+            config = RobotConfig.fromGUISettings();
+        } catch (Exception e) {
+            // Handle exception as needed
+            config = null; //TODO: Fix
+        }
+
+        // Configure AutoBuilder last
+        AutoBuilder.configure(
+                this::getPose, // Robot pose supplier
+                this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
+                this::getRobotRelativeSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+                (speeds, feedforwards) -> drive(speeds), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
+                new PPLTVController(0.02), // PPLTVController is the built in path following controller for differential drive trains
+                config, // The robot configuration
+                () -> {
+                    // Boolean supplier that controls when the path will be mirrored for the red alliance
+                    // This will flip the path being followed to the red side of the field.
+                    // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+                    var alliance = DriverStation.getAlliance();
+                    return alliance.filter(value -> value == DriverStation.Alliance.Red).isPresent();
+                },
+                this // Reference to this subsystem to set requirements
+        );
+
     }
 
 
     @Override
     public void periodic() {
-        SwerveModuleState[] states = new SwerveModuleState[]
-                {
-                        frontLeftModule.getState(),
-                        frontRightModule.getState(),
-                        backLeftModule.getState(),
-                        backRightModule.getState()
-                };
+        SwerveModuleState[] states = getSwerveModuleStates();
         moduleStatePublisher.set(states);
 
         poseEstimator.update(gyro.getRotation2d(), getModulePositions());
@@ -109,6 +136,7 @@ public class Drive extends SubsystemBase {
 
 
     public void drive(ChassisSpeeds speeds) {
+        ChassisSpeeds.discretize(speeds, TICK_TIME);
         SwerveModuleState[] states = kinematics.toSwerveModuleStates(speeds);
         frontLeftModule.setDesiredState(states[0]);
         frontRightModule.setDesiredState(states[1]);
@@ -136,9 +164,30 @@ public class Drive extends SubsystemBase {
         };
     }
 
+    public SwerveModuleState[] getSwerveModuleStates() {
+        return new SwerveModuleState[]{
+                frontLeftModule.getState(),
+                frontRightModule.getState(),
+                backLeftModule.getState(),
+                backRightModule.getState()
+        };
+    }
+
 
     public Rotation2d getGyroRotation() {
         return poseEstimator.getEstimatedPosition().getRotation();
+    }
+
+    public Pose2d getPose() {
+        return poseEstimator.getEstimatedPosition();
+    }
+
+    public void resetPose(Pose2d pose2d) {
+        poseEstimator.resetPose(pose2d);
+    }
+
+    public ChassisSpeeds getRobotRelativeSpeeds() {
+        return kinematics.toChassisSpeeds(getSwerveModuleStates());
     }
 
     /**
