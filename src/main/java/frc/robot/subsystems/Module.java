@@ -97,12 +97,14 @@ public class Module {
     }
 
 
-    public void setDesiredState(SwerveModuleState targetState) {
+    public void setDesiredState(SwerveModuleState targetState, boolean shouldTurn) {
         desiredState = targetState;
         desiredState.optimize(new Rotation2d(turningEncoder.getPosition()));
 
         drivingPID.setReference(desiredState.speedMetersPerSecond, ControlType.kVelocity);
-        turningPID.setReference(desiredState.angle.getRadians(), ControlType.kPosition);
+        if (shouldTurn) {
+            turningPID.setReference(desiredState.angle.getRadians(), ControlType.kPosition);
+        }
     }
 
     public SwerveModuleState getState() {

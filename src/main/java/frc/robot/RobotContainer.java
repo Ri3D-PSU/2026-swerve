@@ -6,6 +6,7 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -14,12 +15,13 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Drive;
 
+import java.util.Set;
 import java.util.concurrent.Future;
 
 
 public class RobotContainer {
 
-    public static final double MAX_LINEAR_SPEED = 0.5;//Units.feetToMeters(17.2);
+    public static final double MAX_LINEAR_SPEED = Units.feetToMeters(17.2);
     public static final double MAX_ANGULAR_SPEED = Math.PI;
     private final Drive drive = new Drive();
 
@@ -35,14 +37,15 @@ public class RobotContainer {
                 }),
                 Commands.waitUntil(() -> onTheFlyPath.isDone()),
                 Commands.race(
-                        Commands.deferredProxy(
+                        Commands.defer(
                                 () -> {
                                     try {
                                         return AutoBuilder.followPath(onTheFlyPath.get());
                                     } catch (Exception e) {
                                         throw new RuntimeException(e);
                                     }
-                                }
+                                },
+                                Set.of(drive)
                         ),
                         Commands.waitUntil(
                                 () -> drive.getPose().getTranslation().minus(finalPathPoint.getTranslation()).getNorm()
@@ -76,7 +79,7 @@ public class RobotContainer {
                         Math.abs(m_driverController.getRightX()) * m_driverController.getRightX() * MAX_ANGULAR_SPEED * -1,
                         true), drive));
         m_driverController.b().whileTrue(
-                getDriveToGoal(new Pose2d(new Translation2d(0, 5), Rotation2d.fromDegrees(180)), Rotation2d.fromDegrees(180))
+                getDriveToGoal(new Pose2d(new Translation2d(0, 5), Rotation2d.fromDegrees(180)), Rotation2d.fromDegrees(0))
         );
 
 

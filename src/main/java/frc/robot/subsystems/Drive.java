@@ -37,6 +37,8 @@ import frc.robot.LimelightHelpers;
 import org.littletonrobotics.junction.Logger;
 import org.opencv.core.Mat;
 
+import java.security.interfaces.RSAMultiPrimePrivateCrtKey;
+
 import static frc.robot.Constants.*;
 
 public class Drive extends SubsystemBase {
@@ -151,12 +153,13 @@ public class Drive extends SubsystemBase {
      * @param speeds robot relative speeds
      */
     public void drive(ChassisSpeeds speeds) {
-        ChassisSpeeds.discretize(speeds, TICK_TIME);
+        speeds = ChassisSpeeds.discretize(speeds, TICK_TIME);
         SwerveModuleState[] states = kinematics.toSwerveModuleStates(speeds);
-        frontLeftModule.setDesiredState(states[0]);
-        frontRightModule.setDesiredState(states[1]);
-        backLeftModule.setDesiredState(states[2]);
-        backRightModule.setDesiredState(states[3]);
+        boolean shouldTurn = Math.abs(speeds.vyMetersPerSecond) + Math.abs(speeds.vxMetersPerSecond) > 0.0;
+        frontLeftModule.setDesiredState(states[0], shouldTurn);
+        frontRightModule.setDesiredState(states[1], shouldTurn);
+        backLeftModule.setDesiredState(states[2], shouldTurn);
+        backRightModule.setDesiredState(states[3], shouldTurn);
 
         desiredStatePublisher.set(states);
 

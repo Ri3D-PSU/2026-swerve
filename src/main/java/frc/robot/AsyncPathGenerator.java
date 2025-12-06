@@ -17,8 +17,18 @@ public class AsyncPathGenerator {
         // Create a list of waypoints from poses. Each pose represents one waypoint.
         // The rotation component of the pose should be the direction of travel. Do not use holonomic rotation.
         var fieldRelativeSpeeds = drive.getFieldRelativeSpeeds();
+        var robotPose = drive.getPose();
+        Rotation2d splineRotation;
+
+        if (Math.abs(fieldRelativeSpeeds.vxMetersPerSecond) + Math.abs(fieldRelativeSpeeds.vyMetersPerSecond) < 0.01) {
+            splineRotation = new Rotation2d(finalPosition.getX() - robotPose.getX(), finalPosition.getY() - robotPose.getY());
+        } else {
+            splineRotation = new Rotation2d(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond);
+        }
+
+        
         List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
-                new Pose2d(drive.getPose().getTranslation(), new Rotation2d(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond)),
+                new Pose2d(drive.getPose().getTranslation(), splineRotation),
                 finalPosition
         );
 
