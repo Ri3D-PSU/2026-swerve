@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -59,6 +60,26 @@ public class RobotContainer {
     }
 
     public RobotContainer() {
+        // Warm up path planner
+        System.out.println("Warming up path planner");
+        for (int i = 0; i < 10; i++) {
+            var finalPathPoint = new Pose2d(
+                    new Translation2d(Math.random() * 10 - 5, Math.random() * 10 - 5),
+                    Rotation2d.fromDegrees(Math.random() * 360)
+            );
+
+            Rotation2d targetRotation = Rotation2d.fromDegrees(Math.random() * 360);
+            var time = Timer.getFPGATimestamp();
+            var path = AsyncPathGenerator.generatePathAsync(finalPathPoint, targetRotation, drive);
+            try {
+                var points = path.get().getAllPathPoints();
+                var duration =  Timer.getFPGATimestamp() - time;
+                System.out.println("Generated path " + i + "/10. " + points.size() + " points in " + duration + " seconds");
+            } catch (Exception e) {
+                System.out.println("Path failed to generate" + e);
+            }
+        }
+
         configureBindings();
     }
 
