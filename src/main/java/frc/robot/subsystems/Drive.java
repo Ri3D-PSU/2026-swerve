@@ -269,4 +269,8 @@ public class Drive extends SubsystemBase {
         backLeftModule.setIdleMode(idleMode);
         backRightModule.setIdleMode(idleMode);
     }
+
+    public void zeroGyro() {
+        gyro.zeroYaw();
+    }
 }

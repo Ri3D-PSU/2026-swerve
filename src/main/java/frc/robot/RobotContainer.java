@@ -103,6 +103,8 @@ public class RobotContainer {
                 getDriveToGoal(new Pose2d(new Translation2d(0, 5), Rotation2d.fromDegrees(180)), Rotation2d.fromDegrees(0))
         );
 
+        m_driverController.leftBumper().and(m_driverController.rightBumper()).onTrue(Commands.runOnce(drive::zeroGyro, drive));
+
 
     }
 
