@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -15,6 +16,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
+import org.littletonrobotics.junction.Logger;
 
 public class Module {
 
@@ -26,6 +28,9 @@ public class Module {
     private final SparkClosedLoopController turningPID;
     private SwerveModuleState desiredState;
     private static final double DRIVE_GEAR_RATIO = 5.9;
+    private int corner;
+
+    private static final double FF = 2.3;
 
 
     public Module(int corner) {
@@ -48,6 +53,8 @@ public class Module {
             }
         }
 
+        this.corner = corner;
+
         drivingEncoder = drivingSparkMax.getEncoder();
         turningEncoder = turningSparkMax.getAbsoluteEncoder();
         drivingPID = drivingSparkMax.getClosedLoopController();
@@ -61,7 +68,7 @@ public class Module {
                 .voltageCompensation(12);
 
         drivingConfig.closedLoop
-                .pidf(0, 0, 0, 0.187)
+                .pidf(0, 0, 0, 0)
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
                 .outputRange(-1, 1);
 
@@ -101,10 +108,13 @@ public class Module {
         desiredState = targetState;
         desiredState.optimize(new Rotation2d(turningEncoder.getPosition()));
 
-        drivingPID.setReference(desiredState.speedMetersPerSecond, ControlType.kVelocity);
+        drivingPID.setReference(desiredState.speedMetersPerSecond, ControlType.kVelocity, ClosedLoopSlot.kSlot0,
+                desiredState.speedMetersPerSecond * FF, SparkClosedLoopController.ArbFFUnits.kVoltage);
         if (shouldTurn) {
             turningPID.setReference(desiredState.angle.getRadians(), ControlType.kPosition);
         }
+        Logger.recordOutput("Swerve Drive Output Voltage " + corner, drivingSparkMax.getAppliedOutput() * drivingSparkMax.getBusVoltage());
+        Logger.recordOutput("Swerve Drive Velocity " + corner, drivingSparkMax.getEncoder().getVelocity());
     }
 
     public SwerveModuleState getState() {

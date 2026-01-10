@@ -19,11 +19,12 @@ import frc.robot.subsystems.Drive;
 import java.util.Set;
 import java.util.concurrent.Future;
 
+import static frc.robot.Constants.MAX_ANGULAR_SPEED;
+import static frc.robot.Constants.MAX_LINEAR_SPEED;
+
 
 public class RobotContainer {
 
-    public static final double MAX_LINEAR_SPEED = Units.feetToMeters(17.2);
-    public static final double MAX_ANGULAR_SPEED = Math.PI;
     private final Drive drive = new Drive();
 
 
@@ -95,12 +96,12 @@ public class RobotContainer {
     private void configureBindings() {
         drive.setDefaultCommand(
                 new RunCommand(() -> drive.drive(
-                        Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED * -1,
-                        Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED * -1,
+                        Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED,
+                        Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED,
                         Math.abs(m_driverController.getRightX()) * m_driverController.getRightX() * MAX_ANGULAR_SPEED * -1,
                         true), drive));
         m_driverController.b().whileTrue(
-                getDriveToGoal(new Pose2d(new Translation2d(0, 5), Rotation2d.fromDegrees(180)), Rotation2d.fromDegrees(0))
+                getDriveToGoal(new Pose2d(new Translation2d(14.8, 4.09), Rotation2d.fromDegrees(180)), Rotation2d.fromDegrees(180))
         );
 
         m_driverController.start().onTrue(Commands.runOnce(drive::zeroPose, drive));
