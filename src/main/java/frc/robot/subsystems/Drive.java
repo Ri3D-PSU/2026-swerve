@@ -270,7 +270,7 @@ public class Drive extends SubsystemBase {
         backRightModule.setIdleMode(idleMode);
     }
 
-    public void zeroGyro() {
-        gyro.zeroYaw();
+    public void zeroPose() {
+        poseEstimator.resetPose(new Pose2d(getPose().getTranslation(), new Rotation2d()));
     }
 }
