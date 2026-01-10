@@ -74,8 +74,8 @@ public class RobotContainer {
             var path = AsyncPathGenerator.generatePathAsync(finalPathPoint, targetRotation, drive);
             try {
                 var points = path.get().getAllPathPoints();
-                var duration = Timer.getFPGATimestamp() - time;
-                System.out.println("Generated path " + i + "/10. " + points.size() + " points in " + duration + " seconds");
+                var duration =  Timer.getFPGATimestamp() - time;
+                System.out.println("Generated path " + (i + 1) + "/10. " + points.size() + " points in " + duration + " seconds");
             } catch (Exception e) {
                 System.out.println("Path failed to generate" + e);
             }
