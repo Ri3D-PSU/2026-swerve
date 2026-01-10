@@ -116,6 +116,7 @@ public class Drive extends SubsystemBase {
         SwerveModuleState[] states = getSwerveModuleStates();
         moduleStatePublisher.set(states);
 
+        Logger.recordOutput("Gyro Rotation", gyro.getRotation2d());
         poseEstimator.update(gyro.getRotation2d(), getModulePositions());
 
 

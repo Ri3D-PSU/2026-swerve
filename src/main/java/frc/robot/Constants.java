@@ -19,7 +19,7 @@ public final class Constants {
     public static String LIMELIGHT_NAME = "limelight";
     public static double TICK_TIME = 20.0 / 1000.0; // 20ms
 
-    public static final double MAX_LINEAR_SPEED = Units.feetToMeters(2);
+    public static final double MAX_LINEAR_SPEED = Units.feetToMeters(18);
     public static final double MAX_ANGULAR_SPEED = Math.PI;
 
 }
