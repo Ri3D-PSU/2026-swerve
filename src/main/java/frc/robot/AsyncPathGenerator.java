@@ -26,14 +26,14 @@ public class AsyncPathGenerator {
             splineRotation = new Rotation2d(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond);
         }
 
-        
+
         List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
                 new Pose2d(drive.getPose().getTranslation(), splineRotation),
                 finalPosition
         );
 
         return CompletableFuture.supplyAsync(() -> {
-            PathConstraints constraints = new PathConstraints(3.0, 2.0, 3 * Math.PI, 4 * Math.PI); // The constraints for this path.
+            PathConstraints constraints = new PathConstraints(Constants.MAX_LINEAR_SPEED, 2.0, Constants.MAX_ANGULAR_SPEED, 4 * Math.PI); // The constraints for this path.
             // PathConstraints constraints = PathConstraints.unlimitedConstraints(12.0); // You can also use unlimited constraints, only limited by motor torque and nominal battery voltage
 
             // Create the path using the waypoints created above

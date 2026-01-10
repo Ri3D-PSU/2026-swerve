@@ -30,6 +30,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -212,12 +213,14 @@ public class Drive extends SubsystemBase {
         return ChassisSpeeds.fromRobotRelativeSpeeds(getRobotRelativeSpeeds(), getGyroRotation());
     }
 
-    PIDController positionTranslationPid = new PIDController(5.0, 0.0, 0.0);
+    PIDController positionTranslationPid = new PIDController(3.0, 0.0, 0.0);
 
-    PIDController positionRotationPid = new PIDController(5.0, 0.0, 0.0);
+    PIDController positionRotationPid = new PIDController(5.0, 0.0, 0.1);
 
     {
         positionRotationPid.enableContinuousInput(0, Units.degreesToRadians(360.0));
+        SmartDashboard.putData(positionRotationPid);
+        SmartDashboard.putData(positionTranslationPid);
     }
 
     public Command pidToPosition(Pose2d goal) {
@@ -254,11 +257,11 @@ public class Drive extends SubsystemBase {
 
         var rotationRate = Math.toRadians(gyro.getRate());
 
-        if (closestTag.distToCamera < 2.0 && rotationRate < Math.PI * 0.25) {
-            rotationStd = Math.max(3.0 * Math.log(closestTag.distToCamera), 1.0);
+        if (closestTag.distToCamera < 1 && rotationRate < Math.PI * 0.25) {
+            rotationStd = Math.max(15.0 * Math.log(closestTag.distToCamera), 1.0);
         }
 
-        var positionStd = 0.1 * Math.log(closestTag.distToCamera) * (1 + rotationRate * 2);
+        var positionStd = 0.3 * Math.log(closestTag.distToCamera) * (1 + rotationRate * 2);
 
         return new Matrix<>(Nat.N3(), Nat.N1(), new double[]{positionStd, positionStd, rotationStd});
     }
