@@ -46,7 +46,7 @@ public class Drive extends SubsystemBase {
     private final Module frontRightModule;
     private final Module backLeftModule;
     private final Module backRightModule;
-    private static final double TRACK_WIDTH_X = Units.inchesToMeters(31.0);
+    private static final double TRACK_WIDTH_X = Units.inchesToMeters(27.0);
     private static final double TRACK_WIDTH_Y = Units.inchesToMeters(27.0);
     private final SwerveDriveKinematics kinematics;
     private final StructArrayPublisher<SwerveModuleState> moduleStatePublisher = NetworkTableInstance.getDefault().getStructArrayTopic("currentStates", SwerveModuleState.struct).publish();
