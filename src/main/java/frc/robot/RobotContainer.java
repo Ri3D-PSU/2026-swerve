@@ -50,9 +50,13 @@ public class RobotContainer {
                                         < Constants.PATH_FINISH_CLOSE_DISTANCE_M
                         )
                 ),
-                drive.pidToPosition(new Pose2d(finalPathPoint.getTranslation(), targetRotation))
-
-
+                Commands.race(
+                        drive.pidToPosition(new Pose2d(finalPathPoint.getTranslation(), targetRotation)),
+                        Commands.waitUntil(
+                                () -> drive.getPose().getTranslation().minus(finalPathPoint.getTranslation()).getNorm()
+                                        < Constants.PATH_FINISH_CLOSE_DISTANCE_M_PID
+                        )
+                )
         );
     }
 
@@ -92,12 +96,12 @@ public class RobotContainer {
     private void configureBindings() {
         drive.setDefaultCommand(
                 new RunCommand(() -> drive.drive(
-                        Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED_TELEOP,
-                        Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED_TELEOP,
+                        -Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED_TELEOP,
+                        -Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED_TELEOP,
                         Math.abs(m_driverController.getRightX()) * m_driverController.getRightX() * MAX_ANGULAR_SPEED * -1,
                         true), drive));
         m_driverController.b().whileTrue(
-                getDriveToGoal(new Pose2d(new Translation2d(14.8, 4.09), Rotation2d.fromDegrees(180)), Rotation2d.fromDegrees(180))
+                getDriveToGoal(new Pose2d(new Translation2d(14.8, 4.09), Rotation2d.fromDegrees(180)), Rotation2d.fromDegrees(0))
         );
 
         m_driverController.start().onTrue(Commands.runOnce(drive::zeroPose, drive));

@@ -17,12 +17,13 @@ import frc.robot.subsystems.Module;
  */
 public final class Constants {
     public static final double PATH_FINISH_CLOSE_DISTANCE_M = 0.2;
+    public static final double PATH_FINISH_CLOSE_DISTANCE_M_PID = 0.03;
     public static String LIMELIGHT_NAME = "limelight";
     public static double TICK_TIME = 20.0 / 1000.0; // 20ms
 
     public static final double MAX_LINEAR_SPEED_AUTO = 12 / Module.FF;
     public static final double MAX_LINEAR_SPEED_TELEOP = 13 / Module.FF;
 
-    public static final double MAX_ANGULAR_SPEED = Math.PI;
+    public static final double MAX_ANGULAR_SPEED = Math.PI * 2;
 
 }
