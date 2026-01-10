@@ -2,14 +2,11 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
-import com.revrobotics.spark.config.SparkBaseConfig;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -19,8 +16,7 @@ import frc.robot.subsystems.Drive;
 import java.util.Set;
 import java.util.concurrent.Future;
 
-import static frc.robot.Constants.MAX_ANGULAR_SPEED;
-import static frc.robot.Constants.MAX_LINEAR_SPEED;
+import static frc.robot.Constants.*;
 
 
 public class RobotContainer {
@@ -74,7 +70,7 @@ public class RobotContainer {
             var path = AsyncPathGenerator.generatePathAsync(finalPathPoint, targetRotation, drive);
             try {
                 var points = path.get().getAllPathPoints();
-                var duration =  Timer.getFPGATimestamp() - time;
+                var duration = Timer.getFPGATimestamp() - time;
                 System.out.println("Generated path " + i + "/10. " + points.size() + " points in " + duration + " seconds");
             } catch (Exception e) {
                 System.out.println("Path failed to generate" + e);
@@ -96,8 +92,8 @@ public class RobotContainer {
     private void configureBindings() {
         drive.setDefaultCommand(
                 new RunCommand(() -> drive.drive(
-                        Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED,
-                        Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED,
+                        Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED_TELEOP,
+                        Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED_TELEOP,
                         Math.abs(m_driverController.getRightX()) * m_driverController.getRightX() * MAX_ANGULAR_SPEED * -1,
                         true), drive));
         m_driverController.b().whileTrue(

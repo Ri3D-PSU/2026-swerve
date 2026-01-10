@@ -30,7 +30,7 @@ public class Module {
     private static final double DRIVE_GEAR_RATIO = 5.9;
     private int corner;
 
-    private static final double FF = 2.3;
+    public static final double FF = 2.3;
 
 
     public Module(int corner) {
