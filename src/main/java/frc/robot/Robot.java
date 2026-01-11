@@ -35,7 +35,6 @@ public class Robot extends LoggedRobot {
 
         Logger.recordMetadata("ProjectName", "MyProject"); // Set a metadata value
 
-        if (isReal()) {
 //      Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
             Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
         } else {
@@ -89,6 +88,7 @@ public class Robot extends LoggedRobot {
         if (m_autonomousCommand != null) {
             m_autonomousCommand.schedule();
         }
+        m_robotContainer.enabledInit();
     }
 
     /**
@@ -107,6 +107,7 @@ public class Robot extends LoggedRobot {
         if (m_autonomousCommand != null) {
             m_autonomousCommand.cancel();
         }
+        m_robotContainer.enabledInit();
     }
 
     /**

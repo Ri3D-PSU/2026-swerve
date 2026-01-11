@@ -6,7 +6,7 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -18,11 +18,11 @@ import frc.robot.subsystems.Drive;
 import java.util.Set;
 import java.util.concurrent.Future;
 
+import static frc.robot.Constants.*;
+
 
 public class RobotContainer {
 
-    public static final double MAX_LINEAR_SPEED = Units.feetToMeters(17.2);
-    public static final double MAX_ANGULAR_SPEED = Math.PI;
     private final Drive drive = new Drive();
 
 
@@ -52,13 +52,37 @@ public class RobotContainer {
                                         < Constants.PATH_FINISH_CLOSE_DISTANCE_M
                         )
                 ),
-                drive.pidToPosition(new Pose2d(finalPathPoint.getTranslation(), targetRotation))
-
-
+                Commands.race(
+                        drive.pidToPosition(new Pose2d(finalPathPoint.getTranslation(), targetRotation)),
+                        Commands.waitUntil(
+                                () -> drive.getPose().getTranslation().minus(finalPathPoint.getTranslation()).getNorm()
+                                        < Constants.PATH_FINISH_CLOSE_DISTANCE_M_PID
+                        )
+                )
         );
     }
 
     public RobotContainer() {
+        // Warm up path planner
+        System.out.println("Warming up path planner");
+        for (int i = 0; i < 10; i++) {
+            var finalPathPoint = new Pose2d(
+                    new Translation2d(Math.random() * 10 - 5, Math.random() * 10 - 5),
+                    Rotation2d.fromDegrees(Math.random() * 360)
+            );
+
+            Rotation2d targetRotation = Rotation2d.fromDegrees(Math.random() * 360);
+            var time = Timer.getFPGATimestamp();
+            var path = AsyncPathGenerator.generatePathAsync(finalPathPoint, targetRotation, drive);
+            try {
+                var points = path.get().getAllPathPoints();
+                var duration =  Timer.getFPGATimestamp() - time;
+                System.out.println("Generated path " + (i + 1) + "/10. " + points.size() + " points in " + duration + " seconds");
+            } catch (Exception e) {
+                System.out.println("Path failed to generate" + e);
+            }
+        }
+
         configureBindings();
     }
 
@@ -74,14 +98,15 @@ public class RobotContainer {
     private void configureBindings() {
         drive.setDefaultCommand(
                 new RunCommand(() -> drive.drive(
-                        Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED * -1,
-                        Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED * -1,
+                        -Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED_TELEOP,
+                        -Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED_TELEOP,
                         Math.abs(m_driverController.getRightX()) * m_driverController.getRightX() * MAX_ANGULAR_SPEED * -1,
                         true), drive));
         m_driverController.b().whileTrue(
-                getDriveToGoal(new Pose2d(new Translation2d(0, 5), Rotation2d.fromDegrees(180)), Rotation2d.fromDegrees(0))
+                getDriveToGoal(new Pose2d(new Translation2d(14.8, 4.09), Rotation2d.fromDegrees(180)), Rotation2d.fromDegrees(0))
         );
 
+        m_driverController.start().onTrue(Commands.runOnce(drive::zeroPose, drive));
 
     }
 
@@ -95,13 +120,18 @@ public class RobotContainer {
         return null;
     }
 
+
     public void disabledInit() {
-//        var setCoastCommand = Commands.run(() -> drive.setBrakeMode(SparkBaseConfig.IdleMode.kCoast))
-//            .beforeStarting(Commands.waitSeconds(3.0))
-//            .ignoringDisable(true);
-//
-//        CommandScheduler.getInstance().schedule(
-//                setCoastCommand
-//        );
+        CommandScheduler.getInstance().schedule(
+                Commands.run(() -> drive.setBrakeMode(SparkBaseConfig.IdleMode.kCoast))
+                        .beforeStarting(Commands.waitSeconds(3.0))
+                        .ignoringDisable(true)
+        );
+    }
+
+    public void enabledInit() {
+        CommandScheduler.getInstance().schedule(
+                Commands.run(() -> drive.setBrakeMode(SparkBaseConfig.IdleMode.kBrake))
+        );
     }
 }

@@ -4,6 +4,9 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.util.Units;
+import frc.robot.subsystems.Module;
+
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
  * constants. This class should not be used for any other purpose. All constants should be declared
@@ -13,7 +16,14 @@ package frc.robot;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-    public static final double PATH_FINISH_CLOSE_DISTANCE_M = 0.3;
+    public static final double PATH_FINISH_CLOSE_DISTANCE_M = 0.2;
+    public static final double PATH_FINISH_CLOSE_DISTANCE_M_PID = 0.03;
     public static String LIMELIGHT_NAME = "limelight";
     public static double TICK_TIME = 20.0 / 1000.0; // 20ms
+
+    public static final double MAX_LINEAR_SPEED_AUTO = 12 / Module.FF;
+    public static final double MAX_LINEAR_SPEED_TELEOP = 13 / Module.FF;
+
+    public static final double MAX_ANGULAR_SPEED = Math.PI * 2;
+
 }
