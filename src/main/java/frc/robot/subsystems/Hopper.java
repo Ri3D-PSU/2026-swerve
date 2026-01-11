@@ -19,14 +19,14 @@ public class Hopper extends SubsystemBase {
     
     public Command run() {
         return Commands.run(
-            () -> sparkMax.set(.5),
+            () -> sparkMax.setVoltage(1),
             this
         );
     }
 
     public Command stop() {
         return Commands.run(
-            () -> sparkMax.set(0),
+            () -> sparkMax.setVoltage(0),
             this
         );
     }
