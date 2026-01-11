@@ -100,11 +100,17 @@ public class RobotContainer {
      */
     private void configureBindings() {
         drive.setDefaultCommand(
-                new RunCommand(() -> drive.drive(
-                        -Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED_TELEOP,
-                        -Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED_TELEOP,
-                        Math.abs(m_driverController.getRightX()) * m_driverController.getRightX() * MAX_ANGULAR_SPEED * -1,
-                        true), drive));
+                new RunCommand(() -> {
+                    var xInput = -Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED_TELEOP;
+                    var yInput = -Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED_TELEOP;
+                    var thetaInput = Math.abs(m_driverController.getRightX()) * m_driverController.getRightX() * MAX_ANGULAR_SPEED * -1;
+                    if(drive.shouldBumpAdjust()) {
+                        drive.rotationPidDrive(xInput, yInput, Math.PI/4, 0.0, 0.0);
+                    } else {
+                        drive.drive(xInput, yInput, thetaInput, true);
+                    }
+
+                    } , drive));
         m_driverController.b().whileTrue(
                 getDriveToGoal(new Pose2d(new Translation2d(14.8, 4.09), Rotation2d.fromDegrees(180)), Rotation2d.fromDegrees(0))
         );

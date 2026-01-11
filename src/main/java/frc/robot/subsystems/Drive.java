@@ -1,20 +1,16 @@
 package frc.robot.subsystems;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.FollowPathCommand;
-import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.controllers.PPLTVController;
-import com.pathplanner.lib.path.PathPlannerPath;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
-import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -35,10 +31,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.LimelightHelpers;
+import frc.robot.Utils;
 import org.littletonrobotics.junction.Logger;
-import org.opencv.core.Mat;
-
-import java.security.interfaces.RSAMultiPrimePrivateCrtKey;
 
 import static frc.robot.Constants.*;
 
@@ -59,6 +53,7 @@ public class Drive extends SubsystemBase {
     private final Field2d field = new Field2d();
     private double lastVisionTimestamp = -1;
 
+    private SimpleMotorFeedforward rotationFeedforward;
 
     public Drive() {
         frontLeftModule = new Module(0);
@@ -107,6 +102,8 @@ public class Drive extends SubsystemBase {
                 },
                 this // Reference to this subsystem to set requirements
         );
+
+        rotationFeedforward = new SimpleMotorFeedforward(0.0, 0.0, 0.0);
 
     }
 
@@ -175,6 +172,14 @@ public class Drive extends SubsystemBase {
         }
     }
 
+    public void rotationPidDrive(double x, double y, double angle, double angularVelocity, double angularAcceleration) {
+        double kV = 0.0;
+        double kA = 0.0;
+        var thetaSpeed = positionRotationPid.calculate(getPose().getRotation().getRadians(), angle) + angularVelocity * kV + angularAcceleration * kA ;
+        drive(ChassisSpeeds.fromFieldRelativeSpeeds(x, y, thetaSpeed, getGyroRotation()));
+    }
+
+
     public SwerveModulePosition[] getModulePositions() {
         return new SwerveModulePosition[]{
                 frontLeftModule.getPosition(),
@@ -217,6 +222,8 @@ public class Drive extends SubsystemBase {
     PIDController positionTranslationPid = new PIDController(5.0, 0.0, 0.0);
 
     PIDController positionRotationPid = new PIDController(5.0, 0.0, 0.1);
+
+
 
     {
         positionRotationPid.enableContinuousInput(0, Units.degreesToRadians(360.0));
@@ -276,5 +283,10 @@ public class Drive extends SubsystemBase {
 
     public void zeroPose() {
         poseEstimator.resetPose(new Pose2d(getPose().getTranslation(), new Rotation2d()));
+    }
+
+    public boolean shouldBumpAdjust() {
+        var futurePos = getPose().getTranslation().plus(new Translation2d(getFieldRelativeSpeeds().vxMetersPerSecond*0.5, getFieldRelativeSpeeds().vyMetersPerSecond*0.5));
+        return (Utils.isPointInBox(futurePos, new Translation2d(), new Translation2d()));
     }
 }
