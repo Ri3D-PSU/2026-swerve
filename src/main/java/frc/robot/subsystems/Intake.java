@@ -25,7 +25,7 @@ public class Intake extends SubsystemBase {
         IntakeSparkMax = new SparkMax(36, MotorType.kBrushless);
         IntakeSwitch = new Solenoid(0, PneumaticsModuleType.CTREPCM, 0);    
         IntakeSparkMax.setVoltage(0);
-        IntakeConfig.idleMode(IdleMode.kBrake);       
+        IntakeConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(40).voltageCompensation(12);     
 
 
     }
@@ -54,11 +54,6 @@ public class Intake extends SubsystemBase {
         IntakeSparkMax.setVoltage(OUTTAKE_VOLTAGE)
     }
 
-
-    
-
-    
-    
     
     
 }
