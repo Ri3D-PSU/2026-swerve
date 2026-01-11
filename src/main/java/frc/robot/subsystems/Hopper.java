@@ -23,7 +23,9 @@ public class Hopper extends SubsystemBase {
         
         sparkMaxConfig
                 .idleMode(IdleMode.kBrake)
+                //.inverted(True).
                 .smartCurrentLimit(40);
+                
         sparkMax.configure(sparkMaxConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
