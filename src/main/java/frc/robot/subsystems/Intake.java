@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
@@ -17,11 +19,15 @@ public class Intake extends SubsystemBase {
     private static final double OUTTAKE_VOLTAGE = -4.0;
     private SparkMax IntakeSparkMax;
     private Solenoid IntakeSwitch;
+    private SparkMaxConfig IntakeConfig;
 
     public Intake() {
         IntakeSparkMax = new SparkMax(36, MotorType.kBrushless);
         IntakeSwitch = new Solenoid(0, PneumaticsModuleType.CTREPCM, 0);    
         IntakeSparkMax.setVoltage(0);
+        IntakeConfig.idleMode(IdleMode.kBrake);       
+
+
     }
     
     public Command IntakeDown() {
