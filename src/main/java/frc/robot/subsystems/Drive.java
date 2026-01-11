@@ -53,7 +53,6 @@ public class Drive extends SubsystemBase {
     private final Field2d field = new Field2d();
     private double lastVisionTimestamp = -1;
 
-    private SimpleMotorFeedforward rotationFeedforward;
 
     public Drive() {
         frontLeftModule = new Module(0);
@@ -102,8 +101,6 @@ public class Drive extends SubsystemBase {
                 },
                 this // Reference to this subsystem to set requirements
         );
-
-        rotationFeedforward = new SimpleMotorFeedforward(0.0, 0.0, 0.0);
 
     }
 
@@ -154,7 +151,7 @@ public class Drive extends SubsystemBase {
     public void drive(ChassisSpeeds speeds) {
         speeds = ChassisSpeeds.discretize(speeds, TICK_TIME);
         SwerveModuleState[] states = kinematics.toSwerveModuleStates(speeds);
-        boolean shouldTurn = Math.abs(speeds.vyMetersPerSecond) + Math.abs(speeds.vxMetersPerSecond) > 0.0;
+        boolean shouldTurn = Math.abs(speeds.vyMetersPerSecond) + Math.abs(speeds.vxMetersPerSecond) + Math.abs(speeds.omegaRadiansPerSecond) > 0.0;
         frontLeftModule.setDesiredState(states[0], shouldTurn);
         frontRightModule.setDesiredState(states[1], shouldTurn);
         backLeftModule.setDesiredState(states[2], shouldTurn);
