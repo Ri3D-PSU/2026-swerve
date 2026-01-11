@@ -105,7 +105,7 @@ public class RobotContainer {
                     var yInput = -Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED_TELEOP;
                     var thetaInput = Math.abs(m_driverController.getRightX()) * m_driverController.getRightX() * MAX_ANGULAR_SPEED * -1;
                     if(drive.shouldBumpAdjust()) {
-                        drive.rotationPidDrive(xInput, yInput, Math.PI/4, 0.0, 0.0);
+                        drive.rotationPidDrive(xInput, yInput, drive.closestBumpAngle(), 0.0, 0.0);
                     } else {
                         drive.drive(xInput, yInput, thetaInput, true);
                     }
