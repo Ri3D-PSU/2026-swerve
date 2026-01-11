@@ -127,7 +127,10 @@ public class Module {
 
 
     public void setIdleMode(IdleMode idleMode) {
-
+        SparkMaxConfig config = new SparkMaxConfig();
+        config.idleMode(idleMode);
+        drivingSparkMax.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+        turningSparkMax.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
     }
 
 }

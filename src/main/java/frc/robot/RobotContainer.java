@@ -2,11 +2,13 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
+import com.revrobotics.spark.config.SparkBaseConfig;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -118,13 +120,18 @@ public class RobotContainer {
         return null;
     }
 
+
     public void disabledInit() {
-//        var setCoastCommand = Commands.run(() -> drive.setBrakeMode(SparkBaseConfig.IdleMode.kCoast))
-//            .beforeStarting(Commands.waitSeconds(3.0))
-//            .ignoringDisable(true);
-//
-//        CommandScheduler.getInstance().schedule(
-//                setCoastCommand
-//        );
+        CommandScheduler.getInstance().schedule(
+                Commands.run(() -> drive.setBrakeMode(SparkBaseConfig.IdleMode.kCoast))
+                        .beforeStarting(Commands.waitSeconds(3.0))
+                        .ignoringDisable(true)
+        );
+    }
+
+    public void enabledInit() {
+        CommandScheduler.getInstance().schedule(
+                Commands.run(() -> drive.setBrakeMode(SparkBaseConfig.IdleMode.kBrake))
+        );
     }
 }
