@@ -18,6 +18,8 @@ import frc.robot.subsystems.Module;
 public final class Constants {
     public static final double PATH_FINISH_CLOSE_DISTANCE_M = 0.2;
     public static final double PATH_FINISH_CLOSE_DISTANCE_M_PID = 0.03;
+    public static final double ANGLE_CLOSE_RAD = Math.PI / 90;
+
     public static String LIMELIGHT_NAME = "limelight";
     public static double TICK_TIME = 20.0 / 1000.0; // 20ms
 

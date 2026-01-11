@@ -2,6 +2,7 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
+import edu.wpi.first.math.MathUtil;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -21,6 +22,7 @@ import java.util.Set;
 import java.util.concurrent.Future;
 
 import static frc.robot.Constants.*;
+import static frc.robot.Utils.getSpeed2;
 
 
 public class RobotContainer {
@@ -52,7 +54,9 @@ public class RobotContainer {
                         ),
                         Commands.waitUntil(
                                 () -> drive.getPose().getTranslation().minus(finalPathPoint.getTranslation()).getNorm()
-                                        < Constants.PATH_FINISH_CLOSE_DISTANCE_M
+                                        < Constants.PATH_FINISH_CLOSE_DISTANCE_M &&
+                                        MathUtil.angleModulus(drive.getPose().getRotation().minus(targetRotation).getRadians()) < ANGLE_CLOSE_RAD &&
+                                        getSpeed2(drive.getRobotRelativeSpeeds()) < 0.1
                         )
                 ),
                 Commands.race(
