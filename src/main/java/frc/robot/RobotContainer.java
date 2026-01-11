@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Drive;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
 
 import java.util.Set;
@@ -26,8 +27,8 @@ import static frc.robot.Constants.*;
 public class RobotContainer {
 
     private final Drive drive = new Drive();
-    private final Shooter shooter = new Shooter();
-
+    //private final Shooter shooter = new Shooter();
+    private final Intake intake = new Intake();
 
     private final CommandXboxController m_driverController = new CommandXboxController(0);
 
@@ -116,6 +117,8 @@ public class RobotContainer {
         );
 
         m_driverController.start().onTrue(Commands.runOnce(drive::zeroPose, drive));
+        m_driverController.a().onTrue(Commands.runOnce(intake::intake));
+        m_driverController.a().onFalse(Commands.runOnce(intake::stop));
 
     }
 
@@ -153,29 +156,29 @@ public class RobotContainer {
     private static final Translation2d TARGET_POS = new Translation2d(14.8, 4.09); // TODO
     private static final double TIME_DELTA = 0.02;
 
-    Command shootCommand = Commands.run(
-            () -> {
-                Translation2d robotVelocity = new Translation2d(drive.getRobotRelativeSpeeds().vxMetersPerSecond, drive.getRobotRelativeSpeeds().vyMetersPerSecond);
-                Translation2d robotPositionT0 = drive.getPose().getTranslation();
-                Translation2d robotPositionT1 = robotPositionT0.plus(robotVelocity.times(TIME_DELTA));
-                Translation2d robotPositionT2 = robotPositionT0.plus(robotVelocity.times(TIME_DELTA * 2));
-
-                Translation2d targetPositionT0 = getTargetPosition(robotPositionT0, robotVelocity);
-                Translation2d targetPositionT1 = getTargetPosition(robotPositionT1, robotVelocity);
-                Translation2d targetPositionT2 = getTargetPosition(robotPositionT2, robotVelocity);
-
-                Rotation2d targetRotationT0 = TARGET_POS.minus(robotPositionT0).getAngle();
-                Rotation2d targetRotationT1 = TARGET_POS.minus(robotPositionT1).getAngle();
-                Rotation2d targetRotationT2 = TARGET_POS.minus(robotPositionT2).getAngle();
-
-                double rotationRateRadT0 = MathUtil.angleModulus(targetRotationT1.getRadians() - targetRotationT0.getRadians()) / TIME_DELTA;
-                double rotationRateRadT1 = MathUtil.angleModulus(targetRotationT2.getRadians() - targetRotationT1.getRadians()) / TIME_DELTA ;
-                double rotationAccel = (rotationRateRadT1 - rotationRateRadT0) / TIME_DELTA;
-
-                shooter.setShooterSpeed(getWantedShooterVelocity(targetPositionT0));
-
-            },  shooter, drive
-    );
+//    Command shootCommand = Commands.run(
+//            () -> {
+//                Translation2d robotVelocity = new Translation2d(drive.getRobotRelativeSpeeds().vxMetersPerSecond, drive.getRobotRelativeSpeeds().vyMetersPerSecond);
+//                Translation2d robotPositionT0 = drive.getPose().getTranslation();
+//                Translation2d robotPositionT1 = robotPositionT0.plus(robotVelocity.times(TIME_DELTA));
+//                Translation2d robotPositionT2 = robotPositionT0.plus(robotVelocity.times(TIME_DELTA * 2));
+//
+//                Translation2d targetPositionT0 = getTargetPosition(robotPositionT0, robotVelocity);
+//                Translation2d targetPositionT1 = getTargetPosition(robotPositionT1, robotVelocity);
+//                Translation2d targetPositionT2 = getTargetPosition(robotPositionT2, robotVelocity);
+//
+//                Rotation2d targetRotationT0 = TARGET_POS.minus(robotPositionT0).getAngle();
+//                Rotation2d targetRotationT1 = TARGET_POS.minus(robotPositionT1).getAngle();
+//                Rotation2d targetRotationT2 = TARGET_POS.minus(robotPositionT2).getAngle();
+//
+//                double rotationRateRadT0 = MathUtil.angleModulus(targetRotationT1.getRadians() - targetRotationT0.getRadians()) / TIME_DELTA;
+//                double rotationRateRadT1 = MathUtil.angleModulus(targetRotationT2.getRadians() - targetRotationT1.getRadians()) / TIME_DELTA ;
+//                double rotationAccel = (rotationRateRadT1 - rotationRateRadT0) / TIME_DELTA;
+//
+//                shooter.setShooterSpeed(getWantedShooterVelocity(targetPositionT0));
+//
+//            },  shooter, drive
+//    );
 
 
 
