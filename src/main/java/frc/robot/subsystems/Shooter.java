@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.littletonrobotics.junction.Logger;
 
 public class Shooter extends SubsystemBase {
 
@@ -59,6 +60,22 @@ public class Shooter extends SubsystemBase {
             shooterPID.setReference(IDLE_SPEED.getDouble(0), SparkBase.ControlType.kMAXMotionVelocityControl);
             setFiring(false);
         }));
+    }
+
+    @Override
+    public void periodic() {
+        Logger.recordOutput("Shooter/Main Velocity", shooterMotor.getEncoder().getVelocity());
+        Logger.recordOutput("Shooter/Follower Velocity", followerMotor.getEncoder().getVelocity());
+        Logger.recordOutput("Shooter/Feeder Velocity", feederMotor.getEncoder().getVelocity());
+
+        Logger.recordOutput("Shooter/Main Current", shooterMotor.getOutputCurrent());
+        Logger.recordOutput("Shooter/Follower Current", followerMotor.getOutputCurrent());
+        Logger.recordOutput("Shooter/Feeder Current", feederMotor.getOutputCurrent());
+
+        Logger.recordOutput("Shooter/Firing", feederMotor.getAppliedOutput() > 0);
+
+        Logger.recordOutput("Shooter/Idle Speed", IDLE_SPEED.getDouble(0));
+        Logger.recordOutput("Shooter/Fire Boost Voltage", FIRE_BOOST_VOLTAGE.getDouble(0));
     }
 
 
