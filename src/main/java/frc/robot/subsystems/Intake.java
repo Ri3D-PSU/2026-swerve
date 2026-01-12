@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
 
@@ -55,6 +56,11 @@ public class Intake extends SubsystemBase {
         IntakeSparkMax.setVoltage(OUTTAKE_VOLTAGE);
     }
 
-    
+    @Override
+    public void periodic() {
+        Logger.recordOutput("Intake Current", IntakeSparkMax.getOutputCurrent());
+        Logger.recordOutput("Intake Output", IntakeSparkMax.getAppliedOutput());
+
+    }
     
 }
