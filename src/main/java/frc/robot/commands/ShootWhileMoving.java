@@ -42,7 +42,7 @@ public class ShootWhileMoving extends Command {
     @Override
     public void execute() {
         // Prediction Math
-        Translation2d robotVelocity = new Translation2d(drive.getRobotRelativeSpeeds().vxMetersPerSecond, drive.getRobotRelativeSpeeds().vyMetersPerSecond);
+        Translation2d robotVelocity = new Translation2d(drive.getFieldRelativeSpeeds().vxMetersPerSecond, drive.getFieldRelativeSpeeds().vyMetersPerSecond);
         Translation2d robotPositionT0 = drive.getPose().getTranslation();
         Translation2d robotPositionT1 = robotPositionT0.plus(robotVelocity.times(TIME_DELTA));
         Translation2d robotPositionT2 = robotPositionT0.plus(robotVelocity.times(TIME_DELTA * 2));
@@ -78,9 +78,10 @@ public class ShootWhileMoving extends Command {
             boostTillTime = Timer.getFPGATimestamp() + SHOOT_BOOST_TIME_S;
         }
 
-        boolean shouldFire = isAligned && isAtSpeed;
 
-        shooter.setShooterSpeed(wantedShooterVelocity, shouldFire && boostTillTime > Timer.getFPGATimestamp());
+        shooter.setShooterSpeed(wantedShooterVelocity, boostTillTime > Timer.getFPGATimestamp());
+
+        boolean shouldFire = isAligned && isAtSpeed;
         shooter.setFiring(shouldFire);
 
         Logger.recordOutput("Shooter/Wanted Velocity", wantedShooterVelocity);
@@ -99,7 +100,7 @@ public class ShootWhileMoving extends Command {
         for (int i = 0; i < 5; i++) { // 5 iterations is usually enough
             double distance = robotPosition.getDistance(currentTargetPosition);
             double tof = distance / 5.0; // TODO: Replace 5.0 with actual Note speed curve
-            currentTargetPosition = TARGET_POS.plus(robotVelocity.times(tof));
+            currentTargetPosition = TARGET_POS.minus(robotVelocity.times(tof));
         }
         return currentTargetPosition;
     }
