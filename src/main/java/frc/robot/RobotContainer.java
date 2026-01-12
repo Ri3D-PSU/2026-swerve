@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.ShootWhileMoving;
 import frc.robot.subsystems.Climb;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Intake;
@@ -37,6 +38,9 @@ public class RobotContainer {
 
 
     private final CommandXboxController m_driverController = new CommandXboxController(0);
+
+    private final Command shootCommand = new ShootWhileMoving(drive, shooter, m_driverController);
+
 
     private Future<PathPlannerPath> onTheFlyPath = null;
 
@@ -163,89 +167,5 @@ public class RobotContainer {
         CommandScheduler.getInstance().schedule(
                 Commands.run(() -> drive.setBrakeMode(SparkBaseConfig.IdleMode.kBrake))
         );
-    }
-
-    public double getWantedShooterVelocity(Translation2d targetPosition) {
-        var robotPose = drive.getPose();
-        var distance = robotPose.getTranslation().getDistance(targetPosition);
-        return distance * 10;
-    }
-
-    private static final Translation2d TARGET_POS = new Translation2d(14.8, 4.09); // TODO
-    private static final double TIME_DELTA = 0.02;
-
-    Command shootCommand = Commands.run(
-            () -> {
-                Translation2d robotVelocity = new Translation2d(drive.getRobotRelativeSpeeds().vxMetersPerSecond, drive.getRobotRelativeSpeeds().vyMetersPerSecond);
-                Translation2d robotPositionT0 = drive.getPose().getTranslation();
-                Translation2d robotPositionT1 = robotPositionT0.plus(robotVelocity.times(TIME_DELTA));
-                Translation2d robotPositionT2 = robotPositionT0.plus(robotVelocity.times(TIME_DELTA * 2));
-
-                Translation2d targetPositionT0 = getTargetPosition(robotPositionT0, robotVelocity);
-                Translation2d targetPositionT1 = getTargetPosition(robotPositionT1, robotVelocity);
-                Translation2d targetPositionT2 = getTargetPosition(robotPositionT2, robotVelocity);
-
-                Rotation2d targetRotationT0 = targetPositionT0.minus(robotPositionT0).getAngle();
-                Rotation2d targetRotationT1 = targetPositionT1.minus(robotPositionT1).getAngle();
-                Rotation2d targetRotationT2 = targetPositionT2.minus(robotPositionT2).getAngle();
-
-                double rotationRateRadT0 = MathUtil.angleModulus(targetRotationT1.getRadians() - targetRotationT0.getRadians()) / TIME_DELTA;
-                double rotationRateRadT1 = MathUtil.angleModulus(targetRotationT2.getRadians() - targetRotationT1.getRadians()) / TIME_DELTA ;
-                double rotationAccel = (rotationRateRadT1 - rotationRateRadT0) / TIME_DELTA;
-
-
-                double wantedShooterVelocity = getWantedShooterVelocity(targetPositionT0);
-
-                double angleError = MathUtil.angleModulus(drive.getPose().getRotation().minus(targetRotationT0).getRadians());
-                Logger.recordOutput("Shooter Wanted Velocity", wantedShooterVelocity);
-                Logger.recordOutput("Shoot Wanted Rotation Rate", rotationRateRadT0);
-                Logger.recordOutput("Shoot Wanted Rotation Acceleration", rotationAccel);
-
-                Logger.recordOutput("Shoot Wanted Angle", targetRotationT0.getDegrees());
-                Logger.recordOutput("Shoot Actual Angle", drive.getPose().getRotation().getDegrees());
-                Logger.recordOutput("Shoot Angle Error", angleError);
-
-
-                // Sets firing based on velocity and angle errors
-                if (Math.abs(shooter.getShooterVelocity() - wantedShooterVelocity) < SHOOTER_VELOCITY_RANGE
-                        && angleError < SHOOT_ANGLE_RANGE_RAD) {
-                    shooter.setFiring(true);
-                    shooter.setShooterSpeed(wantedShooterVelocity, true);
-                } else {
-                    shooter.setFiring(false);
-                    shooter.setShooterSpeed(wantedShooterVelocity, false);
-
-                }
-
-                var xInput = -Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED_TELEOP;
-                var yInput = -Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED_TELEOP;
-
-                drive.rotationPidDrive(xInput, yInput, targetRotationT0.getDegrees(), rotationRateRadT0, rotationAccel);
-            }, shooter, drive
-    );
-
-    public Command runClimber(double volts) {
-        return Commands.run(
-        () -> {
-            climb.setVoltageWithFeedforward(volts, drive.getGyroRoll().getRadians()); // CHECK IF ROLL IS CORRECT
-        }
-        , climb)
-        .finallyDo(
-            (boolean bool) -> {
-                climb.fixPIDPositionReference(drive.getGyroRoll().getRadians());
-            }
-        );
-    }
-
-    public Translation2d getTargetPosition(Translation2d robotPosition, Translation2d robotVelocity) {
-        Translation2d currentTargetPosition = TARGET_POS;
-        for (int i = 0; i < 10; i++) {
-            double distance = robotPosition.getDistance(currentTargetPosition);
-            double tof = distance / 5; // TODO tune
-
-            currentTargetPosition = TARGET_POS.plus(robotVelocity.times(tof));
-        }
-
-        return currentTargetPosition;
     }
 }

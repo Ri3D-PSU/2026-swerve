@@ -25,7 +25,7 @@ public final class Constants {
 
     public static final double MAX_LINEAR_SPEED_AUTO = 12 / Module.FF;
     public static final double MAX_LINEAR_SPEED_TELEOP = 13 / Module.FF;
-
+    public static final double MAX_SHOOTING_SPEED = 8 / Module.FF;
     public static final double MAX_ANGULAR_SPEED = Math.PI * 2;
 
     public static final double SHOOTER_VELOCITY_RANGE = 100;

@@ -103,4 +103,8 @@ public class Shooter extends SubsystemBase {
     public double getShooterVelocity() {
         return shooterMotor.getEncoder().getVelocity();
     }
+
+    public double getFeederCurrent() {
+        return feederMotor.getOutputCurrent();
+    }
 }
