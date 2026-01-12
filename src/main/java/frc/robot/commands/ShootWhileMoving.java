@@ -66,7 +66,7 @@ public class ShootWhileMoving extends Command {
         var xInput = -Math.abs(controller.getLeftY()) * controller.getLeftY() * Constants.MAX_LINEAR_SPEED_TELEOP;
         var yInput = -Math.abs(controller.getLeftX()) * controller.getLeftX() * Constants.MAX_LINEAR_SPEED_TELEOP;
 
-        drive.rotationPidDrive(xInput, yInput, targetRotationT0.getDegrees(), rotationRateRadT0, rotationAccel);
+        drive.rotationPidDrive(xInput, yInput, targetRotationT0.getRadians(), rotationRateRadT0, rotationAccel);
 
         // Shooter Control
         double angleError = MathUtil.angleModulus(drive.getPose().getRotation().minus(targetRotationT0).getRadians());

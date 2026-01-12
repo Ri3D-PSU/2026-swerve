@@ -57,7 +57,7 @@ public class Shooter extends SubsystemBase {
         feederConfig.voltageCompensation(12);
         feederMotor.configure(feederConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
         this.setDefaultCommand(this.run(() -> {
-            shooterPID.setReference(IDLE_SPEED.getDouble(0), SparkBase.ControlType.kMAXMotionVelocityControl);
+            shooterPID.setReference(IDLE_SPEED.getDouble(0), SparkBase.ControlType.kVelocity);
             setFiring(false);
         }));
     }
@@ -89,7 +89,7 @@ public class Shooter extends SubsystemBase {
         if (firingBoost) {
             ff = FIRE_BOOST_VOLTAGE.getDouble(0);
         }
-        shooterPID.setReference(speed, SparkBase.ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot0,
+        shooterPID.setReference(speed, SparkBase.ControlType.kVelocity, ClosedLoopSlot.kSlot0,
                 ff, SparkClosedLoopController.ArbFFUnits.kVoltage);
     }
 

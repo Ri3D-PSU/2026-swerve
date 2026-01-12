@@ -5,7 +5,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 
 public class Utils {
     public static double getSpeed2(ChassisSpeeds chassisSpeeds) {
-        return chassisSpeeds.vxMetersPerSecond * chassisSpeeds.vxMetersPerSecond + chassisSpeeds.vyMetersPerSecond + chassisSpeeds.vyMetersPerSecond;
+        return chassisSpeeds.vxMetersPerSecond * chassisSpeeds.vxMetersPerSecond + chassisSpeeds.vyMetersPerSecond * chassisSpeeds.vyMetersPerSecond;
     }
 
     /**

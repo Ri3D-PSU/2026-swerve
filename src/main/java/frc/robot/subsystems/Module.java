@@ -105,16 +105,26 @@ public class Module {
 
 
     public void setDesiredState(SwerveModuleState targetState, boolean shouldTurn) {
-        desiredState = targetState;
-        desiredState.optimize(new Rotation2d(turningEncoder.getPosition()));
+        desiredState = SwerveModuleState.optimize(targetState, new Rotation2d(turningEncoder.getPosition()));
 
         drivingPID.setReference(desiredState.speedMetersPerSecond, ControlType.kVelocity, ClosedLoopSlot.kSlot0,
                 desiredState.speedMetersPerSecond * FF, SparkClosedLoopController.ArbFFUnits.kVoltage);
         if (shouldTurn) {
             turningPID.setReference(desiredState.angle.getRadians(), ControlType.kPosition);
         }
-        Logger.recordOutput("Swerve Drive Output Voltage " + corner, drivingSparkMax.getAppliedOutput() * drivingSparkMax.getBusVoltage());
-        Logger.recordOutput("Swerve Drive Velocity " + corner, drivingSparkMax.getEncoder().getVelocity());
+        
+        Logger.recordOutput("Drive/Module" + corner + "/DriveCurrent", drivingSparkMax.getOutputCurrent());
+        Logger.recordOutput("Drive/Module" + corner + "/DriveVoltage", drivingSparkMax.getAppliedOutput() * drivingSparkMax.getBusVoltage());
+        Logger.recordOutput("Drive/Module" + corner + "/DriveVelocity", drivingEncoder.getVelocity());
+        Logger.recordOutput("Drive/Module" + corner + "/DrivePosition", drivingEncoder.getPosition());
+
+        Logger.recordOutput("Drive/Module" + corner + "/TurnCurrent", turningSparkMax.getOutputCurrent());
+        Logger.recordOutput("Drive/Module" + corner + "/TurnVoltage", turningSparkMax.getAppliedOutput() * turningSparkMax.getBusVoltage());
+        Logger.recordOutput("Drive/Module" + corner + "/TurnPosition", turningEncoder.getPosition());
+        Logger.recordOutput("Drive/Module" + corner + "/TurnVelocity", turningEncoder.getVelocity());
+
+        Logger.recordOutput("Drive/Module" + corner + "/DesiredSpeed", desiredState.speedMetersPerSecond);
+        Logger.recordOutput("Drive/Module" + corner + "/DesiredAngle", desiredState.angle);
     }
 
     public SwerveModuleState getState() {

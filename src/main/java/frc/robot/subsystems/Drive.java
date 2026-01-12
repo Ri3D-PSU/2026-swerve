@@ -110,6 +110,7 @@ public class Drive extends SubsystemBase {
     public void periodic() {
         SwerveModuleState[] states = getSwerveModuleStates();
         moduleStatePublisher.set(states);
+        Logger.recordOutput("Drive/ModuleStates", states);
 
         Logger.recordOutput("Gyro Rotation", gyro.getRotation2d());
         poseEstimator.update(gyro.getRotation2d(), getModulePositions());
@@ -159,6 +160,7 @@ public class Drive extends SubsystemBase {
         backRightModule.setDesiredState(states[3], shouldTurn);
 
         desiredStatePublisher.set(states);
+        Logger.recordOutput("Drive/DesiredModuleStates", states);
 
     }
 
