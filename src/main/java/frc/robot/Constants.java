@@ -28,4 +28,7 @@ public final class Constants {
 
     public static final double MAX_ANGULAR_SPEED = Math.PI * 2;
 
+    public static final double SHOOTER_VELOCITY_RANGE = 100;
+    public static final double SHOOT_ANGLE_RANGE_RAD = Units.degreesToRadians(2);
+
 }

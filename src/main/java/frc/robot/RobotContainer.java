@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Climb;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Shooter;
+import org.littletonrobotics.junction.Logger;
 
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -123,6 +124,11 @@ public class RobotContainer {
 
         m_driverController.start().onTrue(Commands.runOnce(drive::zeroPose, drive));
 
+        m_driverController.a().whileTrue(Commands.sequence(
+                getDriveToGoal(new Pose2d(6, 7, Rotation2d.fromDegrees(90)), Rotation2d.fromDegrees(0)),
+                climb.extend()
+        ));
+
     }
 
     /**
@@ -170,17 +176,43 @@ public class RobotContainer {
                 Translation2d targetPositionT1 = getTargetPosition(robotPositionT1, robotVelocity);
                 Translation2d targetPositionT2 = getTargetPosition(robotPositionT2, robotVelocity);
 
-                Rotation2d targetRotationT0 = TARGET_POS.minus(robotPositionT0).getAngle();
-                Rotation2d targetRotationT1 = TARGET_POS.minus(robotPositionT1).getAngle();
-                Rotation2d targetRotationT2 = TARGET_POS.minus(robotPositionT2).getAngle();
+                Rotation2d targetRotationT0 = targetPositionT0.minus(robotPositionT0).getAngle();
+                Rotation2d targetRotationT1 = targetPositionT1.minus(robotPositionT1).getAngle();
+                Rotation2d targetRotationT2 = targetPositionT2.minus(robotPositionT2).getAngle();
 
                 double rotationRateRadT0 = MathUtil.angleModulus(targetRotationT1.getRadians() - targetRotationT0.getRadians()) / TIME_DELTA;
                 double rotationRateRadT1 = MathUtil.angleModulus(targetRotationT2.getRadians() - targetRotationT1.getRadians()) / TIME_DELTA ;
                 double rotationAccel = (rotationRateRadT1 - rotationRateRadT0) / TIME_DELTA;
 
-                shooter.setShooterSpeed(getWantedShooterVelocity(targetPositionT0));
 
-            },  shooter, drive
+                double wantedShooterVelocity = getWantedShooterVelocity(targetPositionT0);
+
+                double angleError = MathUtil.angleModulus(drive.getPose().getRotation().minus(targetRotationT0).getRadians());
+                Logger.recordOutput("Shooter Wanted Velocity", wantedShooterVelocity);
+                Logger.recordOutput("Shoot Wanted Rotation Rate", rotationRateRadT0);
+                Logger.recordOutput("Shoot Wanted Rotation Acceleration", rotationAccel);
+
+                Logger.recordOutput("Shoot Wanted Angle", targetRotationT0.getDegrees());
+                Logger.recordOutput("Shoot Actual Angle", drive.getPose().getRotation().getDegrees());
+                Logger.recordOutput("Shoot Angle Error", angleError);
+
+
+                // Sets firing based on velocity and angle errors
+                if (Math.abs(shooter.getShooterVelocity() - wantedShooterVelocity) < SHOOTER_VELOCITY_RANGE
+                        && angleError < SHOOT_ANGLE_RANGE_RAD) {
+                    shooter.setFiring(true);
+                    shooter.setShooterSpeed(wantedShooterVelocity, true);
+                } else {
+                    shooter.setFiring(false);
+                    shooter.setShooterSpeed(wantedShooterVelocity, false);
+
+                }
+
+                var xInput = -Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED_TELEOP;
+                var yInput = -Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED_TELEOP;
+
+                drive.rotationPidDrive(xInput, yInput, targetRotationT0.getDegrees(), rotationRateRadT0, rotationAccel);
+            }, shooter, drive
     );
 
     public Command runClimber(double volts) {

@@ -78,5 +78,10 @@ public class Climb extends SubsystemBase {
   public void fixPIDPositionReference(double currentAngle) { // height or angle
      // Because feedforward is continuously calculated
         double FF = armFF.calculate(currentAngle, 0);
-        leftPID.setReference(climbSparkMaxLeft.getEncoder().getPosition(), ControlType.kPosition, ClosedLoopSlot.kSlot0, FF);}
+        leftPID.setReference(climbSparkMaxLeft.getEncoder().getPosition(), ControlType.kPosition, ClosedLoopSlot.kSlot0, FF);
+  }
+
+  public Command extend() {
+      return Commands.waitSeconds(0.1); //place holder
+  }
 }

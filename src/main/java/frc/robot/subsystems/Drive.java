@@ -289,7 +289,7 @@ public class Drive extends SubsystemBase {
 
     public boolean shouldBumpAdjust() {
         var futurePos = getPose().getTranslation().plus(new Translation2d(getFieldRelativeSpeeds().vxMetersPerSecond*0.5, getFieldRelativeSpeeds().vyMetersPerSecond*0.5));
-        return (Utils.isPointInBox(futurePos, new Translation2d(), new Translation2d())) && Timer.getFPGATimestamp() - lastVisionTimestamp < 1.0;
+        return (Utils.isPointInBox(futurePos, new Translation2d(158.61, 62.35), new Translation2d(205.61, 135.35))) && Timer.getFPGATimestamp() - lastVisionTimestamp < 1.0;
     }
 
     public double closestBumpAngle() {
