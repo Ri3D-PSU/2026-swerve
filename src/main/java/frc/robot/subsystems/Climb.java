@@ -96,8 +96,10 @@ public class Climb extends SubsystemBase {
       return Commands.runOnce(() -> {
         if(retract) {
           extensionSolenoid.set(Value.kReverse);
+          Logger.recordOutput("Climber/Solenoid Status", "Retract");
         } else {
           extensionSolenoid.set(Value.kForward);
+          Logger.recordOutput("Climber/Solenoid Status", "Extend");
         }
       });
   }
