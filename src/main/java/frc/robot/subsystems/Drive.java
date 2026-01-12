@@ -25,6 +25,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -284,7 +285,7 @@ public class Drive extends SubsystemBase {
 
     public boolean shouldBumpAdjust() {
         var futurePos = getPose().getTranslation().plus(new Translation2d(getFieldRelativeSpeeds().vxMetersPerSecond*0.5, getFieldRelativeSpeeds().vyMetersPerSecond*0.5));
-        return (Utils.isPointInBox(futurePos, new Translation2d(), new Translation2d()));
+        return (Utils.isPointInBox(futurePos, new Translation2d(), new Translation2d())) && Timer.getFPGATimestamp() - lastVisionTimestamp < 1.0;
     }
 
     public double closestBumpAngle() {

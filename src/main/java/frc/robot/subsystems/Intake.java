@@ -5,6 +5,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -18,12 +19,12 @@ public class Intake extends SubsystemBase {
     private static final double INTAKE_VOLTAGE = 4.0;
     private static final double OUTTAKE_VOLTAGE = -4.0;
     private SparkMax IntakeSparkMax;
-    private Solenoid IntakeSwitch;
+    private DoubleSolenoid IntakeSwitch;
     private SparkMaxConfig IntakeConfig;
 
     public Intake() {
         IntakeSparkMax = new SparkMax(36, MotorType.kBrushless);
-        IntakeSwitch = new Solenoid(0, PneumaticsModuleType.CTREPCM, 0);    
+        IntakeSwitch = new DoubleSolenoid(0, PneumaticsModuleType.CTREPCM, 0, 1);
         IntakeSparkMax.setVoltage(0);
         IntakeConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(40).voltageCompensation(12);     
 
@@ -31,11 +32,11 @@ public class Intake extends SubsystemBase {
     }
     
     public Command IntakeDown() {
-        return Commands.runOnce(() -> IntakeSwitch.set(true), this);
+        return Commands.runOnce(() -> IntakeSwitch.set(DoubleSolenoid.Value.kForward), this);
     }
 
     public Command IntakeUp() {
-        return Commands.runOnce(() -> IntakeSwitch.set(false), this);
+        return Commands.runOnce(() -> IntakeSwitch.set(DoubleSolenoid.Value.kReverse), this);
     }
     
     public Command toggle() {
@@ -43,7 +44,7 @@ public class Intake extends SubsystemBase {
     }
 
     public boolean isExtended() {
-        return IntakeSwitch.get();
+        return (IntakeSwitch.get().equals(DoubleSolenoid.Value.kForward));
     }
 
     public void intake() {
@@ -51,7 +52,7 @@ public class Intake extends SubsystemBase {
     }
 
     public void outtake() {
-        IntakeSparkMax.setVoltage(OUTTAKE_VOLTAGE)
+        IntakeSparkMax.setVoltage(OUTTAKE_VOLTAGE);
     }
 
     
