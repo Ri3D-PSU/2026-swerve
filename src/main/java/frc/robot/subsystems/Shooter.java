@@ -1,9 +1,6 @@
 package frc.robot.subsystems;
 
-import com.revrobotics.spark.SparkBase;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkLowLevel;
-import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.*;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.GenericEntry;
@@ -24,6 +21,11 @@ public class Shooter extends SubsystemBase {
 
     private final GenericEntry IDLE_SPEED = Shuffleboard.getTab("Configuration")
             .add("IDLE SPEED", 0)
+            .withWidget(BuiltInWidgets.kNumberSlider)
+            .getEntry();
+
+    private final GenericEntry FIRE_BOOST_VOLTAGE = Shuffleboard.getTab("Configuration")
+            .add("FIRING BOOST VOLTAGE", 0)
             .withWidget(BuiltInWidgets.kNumberSlider)
             .getEntry();
 
@@ -53,25 +55,35 @@ public class Shooter extends SubsystemBase {
         feederConfig.smartCurrentLimit(30);
         feederConfig.voltageCompensation(12);
         feederMotor.configure(feederConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
-        this.setDefaultCommand(Commands.runOnce(() ->
-                shooterPID.setReference(IDLE_SPEED.getDouble(0), SparkBase.ControlType.kMAXMotionVelocityControl))
-        );
+        this.setDefaultCommand(Commands.runOnce(() -> {
+            shooterPID.setReference(IDLE_SPEED.getDouble(0), SparkBase.ControlType.kMAXMotionVelocityControl);
+            setFiring(false);
+        }));
     }
 
 
-    public Command setShooterSpeed(double speed) {
-        return Commands.runOnce(
-                () -> shooterPID.setReference(IDLE_SPEED.getDouble(0), SparkBase.ControlType.kMAXMotionVelocityControl),
-                this
-        );
+    /**
+     *
+     * @param speed base speed
+     * @param firingBoost Apply extra voltage when firing
+     */
+    public void setShooterSpeed(double speed, boolean firingBoost) {
+        double ff = 0;
+        if (firingBoost) {
+            ff = FIRE_BOOST_VOLTAGE.getDouble(0);
+        }
+        shooterPID.setReference(speed, SparkBase.ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot0,
+                ff, SparkClosedLoopController.ArbFFUnits.kVoltage);
     }
 
     private static final double FEEDER_FIRING_VOLTAGE = 8;
 
 
-    public Command setFiring(boolean isFiring) {
-        return Commands.runOnce(
-                () -> feederMotor.setVoltage(isFiring ? FEEDER_FIRING_VOLTAGE : 0), this
-        );
+    public void setFiring(boolean isFiring) {
+        feederMotor.setVoltage(isFiring ? FEEDER_FIRING_VOLTAGE : 0);
+    }
+
+    public double getShooterVelocity() {
+        return shooterMotor.getEncoder().getVelocity();
     }
 }
