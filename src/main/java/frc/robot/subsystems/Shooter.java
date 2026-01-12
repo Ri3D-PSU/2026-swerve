@@ -56,7 +56,7 @@ public class Shooter extends SubsystemBase {
         feederConfig.smartCurrentLimit(30);
         feederConfig.voltageCompensation(12);
         feederMotor.configure(feederConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
-        this.setDefaultCommand(Commands.runOnce(() -> {
+        this.setDefaultCommand(this.run(() -> {
             shooterPID.setReference(IDLE_SPEED.getDouble(0), SparkBase.ControlType.kMAXMotionVelocityControl);
             setFiring(false);
         }));

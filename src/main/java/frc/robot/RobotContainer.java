@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Climb;
 import frc.robot.subsystems.Drive;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
 import org.littletonrobotics.junction.Logger;
 
@@ -32,6 +33,7 @@ public class RobotContainer {
     private final Drive drive = new Drive();
     private final Shooter shooter = new Shooter();
     private final Climb climb = new Climb();
+    private final Intake intake = new Intake();
 
 
     private final CommandXboxController m_driverController = new CommandXboxController(0);
@@ -118,11 +120,18 @@ public class RobotContainer {
                     }
 
                     } , drive));
-        m_driverController.b().whileTrue(
-                getDriveToGoal(new Pose2d(new Translation2d(14.8, 4.09), Rotation2d.fromDegrees(180)), Rotation2d.fromDegrees(0))
-        );
+
+//        m_driverController.b().whileTrue(
+//                getDriveToGoal(new Pose2d(new Translation2d(14.8, 4.09), Rotation2d.fromDegrees(180)), Rotation2d.fromDegrees(0))
+//        );
 
         m_driverController.start().onTrue(Commands.runOnce(drive::zeroPose, drive));
+
+        m_driverController.leftTrigger().and(intake::isExtended).whileTrue(intake.intake());
+        m_driverController.rightBumper().and(intake::isExtended).whileTrue(intake.outtake());
+        m_driverController.leftBumper().onTrue(intake.toggleIntake());
+        m_driverController.rightTrigger().whileTrue(shootCommand);
+
 
         m_driverController.a().whileTrue(Commands.sequence(
                 getDriveToGoal(new Pose2d(6, 7, Rotation2d.fromDegrees(90)), Rotation2d.fromDegrees(0)),
