@@ -9,6 +9,8 @@ import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
@@ -17,6 +19,8 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
@@ -96,5 +100,13 @@ public class Climb extends SubsystemBase {
           extensionSolenoid.set(Value.kForward);
         }
       });
+  }
+
+  @Override
+  public void periodic() {
+    Logger.recordOutput("Climber/Left Motor Current", climbSparkMaxLeft.getOutputCurrent());
+    Logger.recordOutput("Climber/Right Motor Current", climbSparkMaxRight.getOutputCurrent());
+    Logger.recordOutput("Climber/Left Motor Applied Output", climbSparkMaxLeft.getAppliedOutput());
+    Logger.recordOutput("Climber/Right Motor Applied Output", climbSparkMaxRight.getAppliedOutput());
   }
 }
