@@ -17,6 +17,9 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -32,6 +35,8 @@ public class Climb extends SubsystemBase {
 
   private final double CLIMB_RATIO = 180; // This is either the rotation or height of the arm depending on which gets chosen
 
+  private DoubleSolenoid extensionSolenoid;
+
   /** Creates a new Climb. */
   public Climb() {
     climbSparkMaxLeft = new SparkMax(50, MotorType.kBrushless);
@@ -39,6 +44,8 @@ public class Climb extends SubsystemBase {
     climbSparkMaxRight = new SparkMax(51, MotorType.kBrushless);
 
     armFF = new ArmFeedforward(0, 0, 0, 0);
+
+    extensionSolenoid = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1); // TODO: get correct channels
     
     SparkMaxConfig leftConfig = new SparkMaxConfig();
         leftConfig
@@ -81,7 +88,13 @@ public class Climb extends SubsystemBase {
         leftPID.setReference(climbSparkMaxLeft.getEncoder().getPosition(), ControlType.kPosition, ClosedLoopSlot.kSlot0, FF);
   }
 
-  public Command extend() {
-      return Commands.waitSeconds(0.1); //place holder
+  public Command extend(boolean retract) {
+      return Commands.runOnce(() -> {
+        if(retract) {
+          extensionSolenoid.set(Value.kReverse);
+        } else {
+          extensionSolenoid.set(Value.kForward);
+        }
+      });
   }
 }
