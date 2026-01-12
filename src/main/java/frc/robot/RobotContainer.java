@@ -124,6 +124,11 @@ public class RobotContainer {
 
         m_driverController.start().onTrue(Commands.runOnce(drive::zeroPose, drive));
 
+        m_driverController.a().whileTrue(Commands.sequence(
+                getDriveToGoal(new Pose2d(6, 7, Rotation2d.fromDegrees(90)), Rotation2d.fromDegrees(0)),
+                climb.extend()
+        ));
+
     }
 
     /**
