@@ -66,14 +66,17 @@ public class Climb extends SubsystemBase {
     climbSparkMaxRight.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
-  public Command setVoltage(double volts) {
+  public Command setVoltageWithFeedforward(double volts, double currentAngle) {
     return Commands.runOnce(
-      () -> {climbSparkMaxLeft.setVoltage(volts);}, 
+      () -> {
+        double FF = armFF.calculate(currentAngle, 0);
+        climbSparkMaxLeft.setVoltage(volts + FF);
+      }, 
       this);
   }
 
-  public void setPosition(double height, double currentAngle) { // height or angle
+  public void fixPIDPositionReference(double currentAngle) { // height or angle
      // Because feedforward is continuously calculated
         double FF = armFF.calculate(currentAngle, 0);
-        leftPID.setReference(height, ControlType.kPosition, ClosedLoopSlot.kSlot0, FF);}
+        leftPID.setReference(climbSparkMaxLeft.getEncoder().getPosition(), ControlType.kPosition, ClosedLoopSlot.kSlot0, FF);}
 }

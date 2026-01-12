@@ -183,12 +183,17 @@ public class RobotContainer {
             },  shooter, drive
     );
 
-    public Command climbCommand(double height) {
+    public Command runClimber(double volts) {
         return Commands.run(
         () -> {
-            climb.setPosition(height, drive.getGyroRoll().getRadians()); // CHECK IF ROLL IS CORRECT
+            climb.setVoltageWithFeedforward(volts, drive.getGyroRoll().getRadians()); // CHECK IF ROLL IS CORRECT
         }
-        , climb);
+        , climb)
+        .finallyDo(
+            (boolean bool) -> {
+                climb.fixPIDPositionReference(drive.getGyroRoll().getRadians());
+            }
+        );
     }
 
     public Translation2d getTargetPosition(Translation2d robotPosition, Translation2d robotVelocity) {
