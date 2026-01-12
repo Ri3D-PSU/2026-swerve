@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.subsystems.Climb;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Shooter;
 
@@ -29,6 +30,7 @@ public class RobotContainer {
 
     private final Drive drive = new Drive();
     private final Shooter shooter = new Shooter();
+    private final Climb climb = new Climb();
 
 
     private final CommandXboxController m_driverController = new CommandXboxController(0);
@@ -181,7 +183,13 @@ public class RobotContainer {
             },  shooter, drive
     );
 
-
+    public Command climbCommand(double height) {
+        return Commands.run(
+        () -> {
+            climb.setPosition(height, drive.getGyroRoll().getRadians()); // CHECK IF ROLL IS CORRECT
+        }
+        , climb);
+    }
 
     public Translation2d getTargetPosition(Translation2d robotPosition, Translation2d robotVelocity) {
         Translation2d currentTargetPosition = TARGET_POS;

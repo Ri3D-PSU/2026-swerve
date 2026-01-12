@@ -8,6 +8,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
+
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
@@ -16,7 +17,6 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -28,11 +28,9 @@ public class Climb extends SubsystemBase {
 
   private SparkMax climbSparkMaxRight;
 
-  // private ElevatorFeedforward elevatorFF;
-  // private ArmFeedforward armFF;
-  // private double ARM_ANGLE_OFFSET = Math.PI / 2;
+  private ArmFeedforward armFF;
 
-  private final double CLIMB_RATIO = 1; // This is either the rotation or height of the arm depending on which gets chosen
+  private final double CLIMB_RATIO = 180; // This is either the rotation or height of the arm depending on which gets chosen
 
   /** Creates a new Climb. */
   public Climb() {
@@ -40,8 +38,7 @@ public class Climb extends SubsystemBase {
     leftPID = climbSparkMaxLeft.getClosedLoopController();
     climbSparkMaxRight = new SparkMax(51, MotorType.kBrushless);
 
-    // elevatorFF = new ElevatorFeedforward(0, 0, 0, 0);
-    // armFF = new ArmFeedforward(0, 0, 0, 0);
+    armFF = new ArmFeedforward(0, 0, 0, 0);
     
     SparkMaxConfig leftConfig = new SparkMaxConfig();
         leftConfig
@@ -52,7 +49,7 @@ public class Climb extends SubsystemBase {
     SparkMaxConfig rightConfig = new SparkMaxConfig();
         rightConfig
                 .idleMode(IdleMode.kBrake)
-                .follow(climbSparkMaxLeft, true)
+                .follow(climbSparkMaxLeft, false)
                 .smartCurrentLimit(40)
                 .voltageCompensation(12);
 
@@ -75,13 +72,8 @@ public class Climb extends SubsystemBase {
       this);
   }
 
-  public Command setPosition(double height) { // height or angle
-    return Commands.runOnce(
-      () -> {
-        double FF = 0;
-        // double FF = elevatorFF.calculate(0);
-        // double FF = armFF.calculate(climbSparkMaxLeft.getEncoder().getPosition() + ARM_ANGLE_OFFSET, 0);
-        leftPID.setReference(height, ControlType.kPosition, ClosedLoopSlot.kSlot0, FF);}, 
-      this);
-  }
+  public void setPosition(double height, double currentAngle) { // height or angle
+     // Because feedforward is continuously calculated
+        double FF = armFF.calculate(currentAngle, 0);
+        leftPID.setReference(height, ControlType.kPosition, ClosedLoopSlot.kSlot0, FF);}
 }

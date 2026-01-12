@@ -45,10 +45,14 @@ public class Shooter extends SubsystemBase  {
 
 
     public Command setShooterSpeed(double speed) {
-        return Commands.run(
+        return Commands.runOnce(
                 () -> shooterMotor.set(speed), this
         );
     }
 
-
+    public Command setFeederSpeed(double speed) {
+        return Commands.runOnce(
+                () -> feederMotor.set(speed), this
+        );
+    }
 }

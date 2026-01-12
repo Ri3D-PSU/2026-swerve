@@ -200,6 +200,10 @@ public class Drive extends SubsystemBase {
         return poseEstimator.getEstimatedPosition().getRotation();
     }
 
+    public Rotation2d getGyroRoll() {
+        return new Rotation2d(Units.degreesToRadians(gyro.getRoll()));
+    }
+
     public Pose2d getPose() {
         return poseEstimator.getEstimatedPosition();
     }
