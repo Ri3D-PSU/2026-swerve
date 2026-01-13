@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.Module;
 
@@ -30,5 +31,7 @@ public final class Constants {
 
     public static final double SHOOTER_VELOCITY_RANGE = 100;
     public static final double SHOOT_ANGLE_RANGE_RAD = Units.degreesToRadians(2);
+
+    public static final PathConstraints normConstraints = new PathConstraints(Constants.MAX_LINEAR_SPEED_AUTO, 5.0,Constants.MAX_ANGULAR_SPEED, 6 *Math.PI);
 
 }

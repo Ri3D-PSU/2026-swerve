@@ -299,4 +299,9 @@ public class Drive extends SubsystemBase {
         double snappedShifted = Math.round(shiftedAngle / (Math.PI / 2.0)) * (Math.PI / 2.0);
         return  snappedShifted + Math.PI/4;
     }
+
+    public Rotation2d getGyroPitch() {
+        return Rotation2d.fromDegrees(gyro.getPitch());
+    }
+
 }

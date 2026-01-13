@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 public class AsyncPathGenerator {
-    public static Future<PathPlannerPath> generatePathAsync(Pose2d finalPosition, Rotation2d goalRotation, Drive drive) {
+    public static Future<PathPlannerPath> generatePathAsync(Pose2d finalPosition, Rotation2d goalRotation, Drive drive, PathConstraints inputConstraints) {
         // Create a list of waypoints from poses. Each pose represents one waypoint.
         // The rotation component of the pose should be the direction of travel. Do not use holonomic rotation.
         var fieldRelativeSpeeds = drive.getFieldRelativeSpeeds();
@@ -33,7 +33,7 @@ public class AsyncPathGenerator {
         );
 
         return CompletableFuture.supplyAsync(() -> {
-            PathConstraints constraints = new PathConstraints(Constants.MAX_LINEAR_SPEED_AUTO, 5.0, Constants.MAX_ANGULAR_SPEED, 6 * Math.PI); // The constraints for this path.
+            PathConstraints constraints = inputConstraints; // The constraints for this path.
             // PathConstraints constraints = PathConstraints.unlimitedConstraints(12.0); // You can also use unlimited constraints, only limited by motor torque and nominal battery voltage
 
             // Create the path using the waypoints created above

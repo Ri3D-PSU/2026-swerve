@@ -1,6 +1,7 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.MathUtil;
 import com.revrobotics.spark.config.SparkBaseConfig;
@@ -44,10 +45,10 @@ public class RobotContainer {
 
     private Future<PathPlannerPath> onTheFlyPath = null;
 
-    public Command getDriveToGoal(Pose2d finalPathPoint, Rotation2d targetRotation) {
+    public Command getDriveToGoal(Pose2d finalPathPoint, Rotation2d targetRotation, PathConstraints constraints) {
         return Commands.sequence(
                 Commands.runOnce(() -> {
-                    onTheFlyPath = AsyncPathGenerator.generatePathAsync(finalPathPoint, targetRotation, drive);
+                    onTheFlyPath = AsyncPathGenerator.generatePathAsync(finalPathPoint, targetRotation, drive, constraints);
                 }),
                 Commands.waitUntil(() -> onTheFlyPath.isDone()),
                 Commands.race(
@@ -89,7 +90,7 @@ public class RobotContainer {
 
             Rotation2d targetRotation = Rotation2d.fromDegrees(Math.random() * 360);
             var time = Timer.getFPGATimestamp();
-            var path = AsyncPathGenerator.generatePathAsync(finalPathPoint, targetRotation, drive);
+            var path = AsyncPathGenerator.generatePathAsync(finalPathPoint, targetRotation, drive, normConstraints);
             try {
                 var points = path.get().getAllPathPoints();
                 var duration =  Timer.getFPGATimestamp() - time;
@@ -138,8 +139,18 @@ public class RobotContainer {
 
 
         m_driverController.a().whileTrue(Commands.sequence(
-                getDriveToGoal(new Pose2d(6, 7, Rotation2d.fromDegrees(90)), Rotation2d.fromDegrees(0)),
+                Commands.race(
+                        getDriveToGoal(new Pose2d(6, 7, Rotation2d.fromDegrees(90)), Rotation2d.fromDegrees(0), normConstraints),
+                        Commands.waitUntil(() -> LimelightHelpers.getFiducialID(Constants.LIMELIGHT_NAME) == 15)
+                ),
+                Commands.waitSeconds(0.5),
+                getDriveToGoal(new Pose2d(6, 7, Rotation2d.fromDegrees(90)), Rotation2d.fromDegrees(0), normConstraints),
                 climb.extend(false)
+        ));
+
+        m_driverController.x().whileTrue(Commands.sequence(
+                climb.setVoltageWithFeedforward(3, drive).until(() -> drive.getGyroPitch().getDegrees() >= 180),
+                climb.fixPIDPositionReference(drive.getGyroPitch().getRadians())
         ));
 
     }
