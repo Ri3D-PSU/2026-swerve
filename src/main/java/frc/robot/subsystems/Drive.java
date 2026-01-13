@@ -106,6 +106,9 @@ public class Drive extends SubsystemBase {
     }
 
 
+    private double lastAngularVelocity = 0.0;
+    private double lastLogTime = 0.0;
+
     @Override
     public void periodic() {
         SwerveModuleState[] states = getSwerveModuleStates();
@@ -142,8 +145,31 @@ public class Drive extends SubsystemBase {
         }
         Logger.recordOutput("Last Vision Update", lastVisionTimestamp);
         Logger.recordOutput("Fused Pose", poseEstimator.getEstimatedPosition());
+        
 
         field.setRobotPose(poseEstimator.getEstimatedPosition()); // Logs the position for advantagekit
+
+        // Logging for feedforward characterization
+        double currentTime = Timer.getFPGATimestamp();
+        double currentAngularVelocity = Units.degreesToRadians(gyro.getRate());
+        double dt = currentTime - lastLogTime;
+        double angularAcceleration = 0.0;
+        
+        if (dt > 0) {
+             angularAcceleration = (currentAngularVelocity - lastAngularVelocity) / dt;
+        }
+
+        double avgDriveVoltage = (Math.abs(frontLeftModule.getDriveVoltage()) + 
+                                  Math.abs(frontRightModule.getDriveVoltage()) + 
+                                  Math.abs(backLeftModule.getDriveVoltage()) + 
+                                  Math.abs(backRightModule.getDriveVoltage())) / 4.0;
+
+        if (Utils.getSpeed2(getRobotRelativeSpeeds()) < 0.1) {
+            System.out.printf("%.4f,%.4f,%.4f,%.4f%n", currentTime, currentAngularVelocity, angularAcceleration, avgDriveVoltage);
+        }
+
+        lastAngularVelocity = currentAngularVelocity;
+        lastLogTime = currentTime;
     }
 
 

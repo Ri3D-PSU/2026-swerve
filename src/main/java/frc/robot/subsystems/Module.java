@@ -143,4 +143,8 @@ public class Module {
         turningSparkMax.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
     }
 
+    public double getDriveVoltage() {
+        return drivingSparkMax.getAppliedOutput() * drivingSparkMax.getBusVoltage();
+    }
+
 }
