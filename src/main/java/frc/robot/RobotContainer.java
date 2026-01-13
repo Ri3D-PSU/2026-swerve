@@ -149,7 +149,10 @@ public class RobotContainer {
         ));
 
         m_driverController.x().whileTrue(Commands.sequence(
-                climb.setVoltageWithFeedforward(3, drive).until(() -> drive.getGyroPitch().getDegrees() >= 180),
+                Commands.parallel(
+                        climb.setVoltageWithFeedforward(3, drive).until(() -> drive.getGyroPitch().getDegrees() >= 180),
+                        Commands.run(() -> drive.drive(0.2, 0, 0, true)).until(() -> drive.getGyroPitch().getDegrees() >= 30)
+                ),
                 climb.fixPIDPositionReference(drive.getGyroPitch().getRadians())
         ));
 
