@@ -26,10 +26,10 @@ public final class Constants {
 
     public static final double MAX_LINEAR_SPEED_AUTO = 12 / Module.FF;
     public static final double MAX_LINEAR_SPEED_TELEOP = 13 / Module.FF;
-    public static final double MAX_SHOOTING_SPEED = 8 / Module.FF;
+    public static final double MAX_SHOOTING_SPEED = 5 / Module.FF;
     public static final double MAX_ANGULAR_SPEED = Math.PI * 2;
 
-    public static final double SHOOTER_VELOCITY_RANGE = 200;
+    public static final double SHOOTER_VELOCITY_RANGE = 50;
     public static final double SHOOT_ANGLE_RANGE_RAD = Units.degreesToRadians(2);
 
     public static final PathConstraints normConstraints = new PathConstraints(Constants.MAX_LINEAR_SPEED_AUTO, 5.0, Constants.MAX_ANGULAR_SPEED, 6 * Math.PI);

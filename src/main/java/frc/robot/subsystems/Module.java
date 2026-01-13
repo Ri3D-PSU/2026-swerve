@@ -86,7 +86,7 @@ public class Module {
                 .voltageCompensation(12);
 
         turningConfig.closedLoop
-                .pidf(0.8, 0, 0, 0)
+                .pidf(2, 0, 0, 0)
                 .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
                 .positionWrappingEnabled(true)
                 .positionWrappingInputRange(0, 2 * Math.PI)

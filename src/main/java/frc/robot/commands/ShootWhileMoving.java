@@ -13,6 +13,7 @@ import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Shooter;
 import org.littletonrobotics.junction.Logger;
 
+import static frc.robot.Constants.SHOOT_ANGLE_RANGE_RAD;
 import static frc.robot.RobotContainer.getControls;
 
 
@@ -22,13 +23,10 @@ public class ShootWhileMoving extends Command {
     private final CommandXboxController controller;
 
     private static final Translation2d TARGET_POS = new Translation2d(
-            Units.inchesToMeters(206.11),
+            Units.inchesToMeters(196.11),
             Units.inchesToMeters(158.84));
     private static final double TIME_DELTA = 0.02;
-    private static final double SHOOTER_VELOCITY_RANGE = 50.0; // Tune this
-    private static final double SHOOT_ANGLE_RANGE_RAD = Math.toRadians(2.0);
-
-    private static final double FEEDER_HAS_BALL_CURRENT_THRESHOLD = 15; // TODO tune
+    private static final double FEEDER_HAS_BALL_CURRENT_THRESHOLD = 30; // TODO tune
     private static final double SHOOT_BOOST_TIME_S = 0.4;
     private double boostTillTime = 0;
 
@@ -108,9 +106,9 @@ public class ShootWhileMoving extends Command {
     private Translation2d getTargetPosition(Translation2d robotPosition, Translation2d robotVelocity) {
         Translation2d currentTargetPosition = TARGET_POS;
         // Simple iterative solver for Time of Flight
-        for (int i = 0; i < 5; i++) { // 5 iterations is usually enough
+        for (int i = 0; i < 10; i++) {
             double distance = robotPosition.getDistance(currentTargetPosition);
-            double tof = 1.2; // TODO: Replace 5.0 with actual Note speed curve
+            double tof = distance / 4 + 0.7;
             currentTargetPosition = TARGET_POS.minus(robotVelocity.times(tof));
         }
         return currentTargetPosition;
@@ -119,6 +117,6 @@ public class ShootWhileMoving extends Command {
     private double getWantedShooterVelocity(Translation2d targetPosition) {
         var robotPose = drive.getPose();
         var distance = robotPose.getTranslation().getDistance(targetPosition);
-        return 44.09333 * distance * distance + 1528.56193; // TODO: Replace with lookup table or regression
+        return 32.95965 * distance * distance + 1490.87513; // TODO: Replace with lookup table or regression
     }
 }

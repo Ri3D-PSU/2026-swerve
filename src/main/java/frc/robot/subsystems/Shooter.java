@@ -47,7 +47,7 @@ public class Shooter extends SubsystemBase {
         feederMotor = new SparkMax(58, SparkLowLevel.MotorType.kBrushless);
 
         SparkMaxConfig shooterConfig = new SparkMaxConfig();
-        shooterConfig.closedLoop.pidf(0.001, 0, 0, 0.0003408478); // TODO: tune
+        shooterConfig.closedLoop.pidf(0.001, 0, 0.0001, 0.0003398478); // TODO: tune
         shooterConfig.smartCurrentLimit(40);
         shooterConfig.voltageCompensation(11);
         shooterConfig.idleMode(SparkBaseConfig.IdleMode.kCoast);

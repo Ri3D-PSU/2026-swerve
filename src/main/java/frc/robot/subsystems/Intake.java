@@ -16,8 +16,8 @@ import org.littletonrobotics.junction.Logger;
 public class Intake extends SubsystemBase {
 
 
-    private static final double INTAKE_VOLTAGE = 4.0;
-    private static final double OUTTAKE_VOLTAGE = -4.0;
+    private static final double INTAKE_VOLTAGE = 11.0;
+    private static final double OUTTAKE_VOLTAGE = -11.0;
     private final SparkMax intakeSparkMax;
     private final DoubleSolenoid intakeSwitch;
 
