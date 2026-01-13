@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.spark.*;
+import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.GenericEntry;
@@ -40,6 +41,7 @@ public class Shooter extends SubsystemBase {
         shooterConfig.closedLoop.pidf(0.1, 0, 0, 0.1); // TODO: tune
         shooterConfig.smartCurrentLimit(50);
         shooterConfig.voltageCompensation(12);
+        shooterConfig.idleMode(SparkBaseConfig.IdleMode.kCoast);
         shooterMotor.configure(shooterConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
 
 
@@ -49,12 +51,14 @@ public class Shooter extends SubsystemBase {
         followerConfig.follow(shooterMotor, true); // TODO: check invert
         followerConfig.smartCurrentLimit(50);
         followerConfig.voltageCompensation(12);
+        followerConfig.idleMode(SparkBaseConfig.IdleMode.kCoast);
         followerMotor.configure(followerConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
 
 
         SparkMaxConfig feederConfig = new SparkMaxConfig();
         feederConfig.smartCurrentLimit(30);
         feederConfig.voltageCompensation(12);
+        feederConfig.idleMode(SparkBaseConfig.IdleMode.kBrake);
         feederMotor.configure(feederConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
         this.setDefaultCommand(this.run(() -> {
             shooterPID.setReference(IDLE_SPEED.getDouble(0), SparkBase.ControlType.kVelocity);
