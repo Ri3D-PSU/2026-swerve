@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.spark.*;
+import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -42,8 +43,12 @@ public class Shooter extends SubsystemBase {
         shooterConfig.smartCurrentLimit(50);
         shooterConfig.voltageCompensation(12);
         shooterConfig.idleMode(SparkBaseConfig.IdleMode.kCoast);
-        shooterMotor.configure(shooterConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
 
+        EncoderConfig encoderConfig = new EncoderConfig();
+        encoderConfig.velocityConversionFactor(1.0 / 2.0);
+        encoderConfig.positionConversionFactor(1.0 / 2.0);
+        shooterConfig.apply(encoderConfig);
+        shooterMotor.configure(shooterConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
 
         shooterPID = shooterMotor.getClosedLoopController();
 

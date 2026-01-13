@@ -145,7 +145,7 @@ public class Drive extends SubsystemBase {
         }
         Logger.recordOutput("Last Vision Update", lastVisionTimestamp);
         Logger.recordOutput("Fused Pose", poseEstimator.getEstimatedPosition());
-        
+
 
         field.setRobotPose(poseEstimator.getEstimatedPosition()); // Logs the position for advantagekit
 
@@ -154,15 +154,15 @@ public class Drive extends SubsystemBase {
         double currentAngularVelocity = Units.degreesToRadians(gyro.getRate());
         double dt = currentTime - lastLogTime;
         double angularAcceleration = 0.0;
-        
+
         if (dt > 0) {
-             angularAcceleration = (currentAngularVelocity - lastAngularVelocity) / dt;
+            angularAcceleration = (currentAngularVelocity - lastAngularVelocity) / dt;
         }
 
-        double avgDriveVoltage = (Math.abs(frontLeftModule.getDriveVoltage()) + 
-                                  Math.abs(frontRightModule.getDriveVoltage()) + 
-                                  Math.abs(backLeftModule.getDriveVoltage()) + 
-                                  Math.abs(backRightModule.getDriveVoltage())) / 4.0;
+        double avgDriveVoltage = (Math.abs(frontLeftModule.getDriveVoltage()) +
+                Math.abs(frontRightModule.getDriveVoltage()) +
+                Math.abs(backLeftModule.getDriveVoltage()) +
+                Math.abs(backRightModule.getDriveVoltage())) / 4.0;
 
         if (Utils.getSpeed2(getRobotRelativeSpeeds()) < 0.1) {
             //System.out.printf("%.4f,%.4f,%.4f,%.4f%n", currentTime, currentAngularVelocity, angularAcceleration, avgDriveVoltage);
@@ -201,7 +201,7 @@ public class Drive extends SubsystemBase {
     public void rotationPidDrive(double x, double y, double angle, double angularVelocity, double angularAcceleration) {
         double kV = 0.0;
         double kA = 0.0;
-        var thetaSpeed = positionRotationPid.calculate(getPose().getRotation().getRadians(), angle) + angularVelocity * kV + angularAcceleration * kA ;
+        var thetaSpeed = positionRotationPid.calculate(getPose().getRotation().getRadians(), angle) + angularVelocity * kV + angularAcceleration * kA;
         drive(ChassisSpeeds.fromFieldRelativeSpeeds(x, y, thetaSpeed, getGyroRotation()));
     }
 
@@ -254,11 +254,10 @@ public class Drive extends SubsystemBase {
     PIDController positionRotationPid = new PIDController(5.0, 0.0, 0.1);
 
 
-
     {
         positionRotationPid.enableContinuousInput(0, Units.degreesToRadians(360.0));
-        SmartDashboard.putData(positionRotationPid);
-        SmartDashboard.putData(positionTranslationPid);
+        SmartDashboard.putData("Position rotation pid", positionRotationPid);
+        SmartDashboard.putData("Position translation pid", positionTranslationPid);
     }
 
     public Command pidToPosition(Pose2d goal) {
@@ -316,14 +315,14 @@ public class Drive extends SubsystemBase {
     }
 
     public boolean shouldBumpAdjust() {
-        var futurePos = getPose().getTranslation().plus(new Translation2d(getFieldRelativeSpeeds().vxMetersPerSecond*0.5, getFieldRelativeSpeeds().vyMetersPerSecond*0.5));
+        var futurePos = getPose().getTranslation().plus(new Translation2d(getFieldRelativeSpeeds().vxMetersPerSecond * 0.5, getFieldRelativeSpeeds().vyMetersPerSecond * 0.5));
         return (Utils.isPointInBox(futurePos, new Translation2d(158.61, 62.35), new Translation2d(205.61, 135.35))) && Timer.getFPGATimestamp() - lastVisionTimestamp < 1.0;
     }
 
     public double closestBumpAngle() {
-        double shiftedAngle = getPose().getRotation().getRadians() - Math.PI/4;
+        double shiftedAngle = getPose().getRotation().getRadians() - Math.PI / 4;
         double snappedShifted = Math.round(shiftedAngle / (Math.PI / 2.0)) * (Math.PI / 2.0);
-        return  snappedShifted + Math.PI/4;
+        return snappedShifted + Math.PI / 4;
     }
 
     public Rotation2d getGyroPitch() {

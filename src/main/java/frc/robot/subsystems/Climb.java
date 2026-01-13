@@ -43,7 +43,9 @@ public class Climb extends SubsystemBase {
 
     private DoubleSolenoid extensionSolenoid;
 
-    /** Creates a new Climb. */
+    /**
+     * Creates a new Climb.
+     */
     public Climb() {
         climbSparkMaxLeft = new SparkMax(23, MotorType.kBrushless);
         leftPID = climbSparkMaxLeft.getClosedLoopController();
@@ -51,7 +53,7 @@ public class Climb extends SubsystemBase {
 
         armFF = new ArmFeedforward(0, 0, 0, 0);
 
-        extensionSolenoid = new DoubleSolenoid(8, PneumaticsModuleType.CTREPCM, 2, 3); // TODO: get correct channels
+        extensionSolenoid = new DoubleSolenoid(8, PneumaticsModuleType.CTREPCM, 0, 2); // TODO: get correct channels
 
         SparkMaxConfig leftConfig = new SparkMaxConfig();
         leftConfig
@@ -98,7 +100,7 @@ public class Climb extends SubsystemBase {
 
     public Command extend(boolean retract) {
         return Commands.runOnce(() -> {
-            if(retract) {
+            if (retract) {
                 extensionSolenoid.set(Value.kReverse);
                 Logger.recordOutput("Climber/Solenoid Status", "Retract");
             } else {

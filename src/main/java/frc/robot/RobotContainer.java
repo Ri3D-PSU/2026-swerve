@@ -135,6 +135,7 @@ public class RobotContainer {
         m_driverController.leftTrigger().and(intake::isExtended).whileTrue(intake.intake());
         m_driverController.rightBumper().and(intake::isExtended).whileTrue(intake.outtake());
         m_driverController.leftBumper().onTrue(intake.toggleIntake());
+        
         m_driverController.rightTrigger().whileTrue(shootCommand);
 
 

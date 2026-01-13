@@ -15,7 +15,6 @@ import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
 
-   
 
     private static final double INTAKE_VOLTAGE = 4.0;
     private static final double OUTTAKE_VOLTAGE = -4.0;
@@ -26,7 +25,7 @@ public class Intake extends SubsystemBase {
     public Intake() {
         intakeSparkMax = new SparkMax(53, MotorType.kBrushless);
         SparkMax followerSparkMax = new SparkMax(30, MotorType.kBrushless);
-        intakeSwitch = new DoubleSolenoid(8, PneumaticsModuleType.CTREPCM, 0, 1);
+        intakeSwitch = new DoubleSolenoid(8, PneumaticsModuleType.CTREPCM, 1, 3);
         intakeSparkMax.setVoltage(0);
         var intakeConfig = new SparkMaxConfig();
         intakeConfig.idleMode(IdleMode.kBrake);
@@ -39,7 +38,8 @@ public class Intake extends SubsystemBase {
         followerConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(40).voltageCompensation(12).follow(53, true);
         followerSparkMax.configure(followerConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
     }
-    
+
+
     public Command intakeDown() {
         return Commands.runOnce(() -> intakeSwitch.set(DoubleSolenoid.Value.kForward));
     }
@@ -49,7 +49,9 @@ public class Intake extends SubsystemBase {
     }
 
     public Command toggleIntake() {
-        return Commands.runOnce(intakeSwitch::toggle);
+        return Commands.runOnce(() -> {
+            intakeSwitch.set(isExtended() ? DoubleSolenoid.Value.kReverse : DoubleSolenoid.Value.kForward);
+        });
     }
 
     public boolean isExtended() {
@@ -69,7 +71,8 @@ public class Intake extends SubsystemBase {
     public void periodic() {
         Logger.recordOutput("Intake Current", intakeSparkMax.getOutputCurrent());
         Logger.recordOutput("Intake Output", intakeSparkMax.getAppliedOutput());
+        Logger.recordOutput("Intake Extended", intakeSwitch.get());
 
     }
-    
+
 }
