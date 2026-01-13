@@ -147,15 +147,15 @@ public class RobotContainer {
         ));
 
 
-        m_driverController.a().whileTrue(Commands.sequence(
-                Commands.race(
-                        getDriveToGoal(new Pose2d(6, 7, Rotation2d.fromDegrees(90)), Rotation2d.fromDegrees(0), normConstraints),
-                        Commands.waitUntil(() -> LimelightHelpers.getFiducialID(Constants.LIMELIGHT_NAME) == 15)
-                ),
-                Commands.waitSeconds(0.5),
-                getDriveToGoal(new Pose2d(6, 7, Rotation2d.fromDegrees(90)), Rotation2d.fromDegrees(0), normConstraints),
-                climb.extend(false)
-        ));
+//        m_driverController.a().whileTrue(Commands.sequence(
+//                Commands.race(
+//                        getDriveToGoal(new Pose2d(6, 7, Rotation2d.fromDegrees(90)), Rotation2d.fromDegrees(0), normConstraints),
+//                        Commands.waitUntil(() -> LimelightHelpers.getFiducialID(Constants.LIMELIGHT_NAME) == 15)
+//                ),
+//                Commands.waitSeconds(0.5),
+//                getDriveToGoal(new Pose2d(6, 7, Rotation2d.fromDegrees(90)), Rotation2d.fromDegrees(0), normConstraints),
+//                climb.extend(false)
+//        ));
 
 //        m_driverController.x().whileTrue(Commands.sequence(
 //                Commands.parallel(
