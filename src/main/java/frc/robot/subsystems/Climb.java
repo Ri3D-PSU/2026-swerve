@@ -45,9 +45,9 @@ public class Climb extends SubsystemBase {
 
     /** Creates a new Climb. */
     public Climb() {
-        climbSparkMaxLeft = new SparkMax(50, MotorType.kBrushless);
+        climbSparkMaxLeft = new SparkMax(23, MotorType.kBrushless);
         leftPID = climbSparkMaxLeft.getClosedLoopController();
-        climbSparkMaxRight = new SparkMax(51, MotorType.kBrushless);
+        climbSparkMaxRight = new SparkMax(24, MotorType.kBrushless);
 
         armFF = new ArmFeedforward(0, 0, 0, 0);
 

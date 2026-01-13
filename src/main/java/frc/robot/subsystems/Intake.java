@@ -23,15 +23,20 @@ public class Intake extends SubsystemBase {
     private final DoubleSolenoid intakeSwitch;
 
     public Intake() {
-        intakeSparkMax = new SparkMax(36, MotorType.kBrushless);
+        intakeSparkMax = new SparkMax(53, MotorType.kBrushless);
+        SparkMax followerSparkMax = new SparkMax(30, MotorType.kBrushless);
         intakeSwitch = new DoubleSolenoid(0, PneumaticsModuleType.CTREPCM, 0, 1);
         intakeSparkMax.setVoltage(0);
-        var config = new SparkMaxConfig();
-        config.idleMode(IdleMode.kBrake);
-        config.smartCurrentLimit(40);
-        config.voltageCompensation(12);
-        intakeSparkMax.configure(config, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
+        var intakeConfig = new SparkMaxConfig();
+        intakeConfig.idleMode(IdleMode.kBrake);
+        intakeConfig.smartCurrentLimit(40);
+        intakeConfig.voltageCompensation(12);
+        intakeSparkMax.configure(intakeConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
         this.setDefaultCommand(this.run(() -> intakeSparkMax.setVoltage(0)));
+
+        var followerConfig = new SparkMaxConfig();
+        followerConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(40).voltageCompensation(12).follow(53, true);
+        followerSparkMax.configure(followerConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
     }
     
     public Command intakeDown() {

@@ -33,9 +33,9 @@ public class Shooter extends SubsystemBase {
 
 
     public Shooter() {
-        shooterMotor = new SparkMax(30, SparkLowLevel.MotorType.kBrushless);
-        followerMotor = new SparkMax(31, SparkLowLevel.MotorType.kBrushless);
-        feederMotor = new SparkMax(32, SparkLowLevel.MotorType.kBrushless);
+        shooterMotor = new SparkMax(17, SparkLowLevel.MotorType.kBrushless);
+        followerMotor = new SparkMax(37, SparkLowLevel.MotorType.kBrushless);
+        feederMotor = new SparkMax(58, SparkLowLevel.MotorType.kBrushless);
 
         SparkMaxConfig shooterConfig = new SparkMaxConfig();
         shooterConfig.closedLoop.pidf(0.1, 0, 0, 0.1); // TODO: tune
@@ -48,7 +48,7 @@ public class Shooter extends SubsystemBase {
         shooterPID = shooterMotor.getClosedLoopController();
 
         SparkMaxConfig followerConfig = new SparkMaxConfig();
-        followerConfig.follow(shooterMotor, true); // TODO: check invert
+        followerConfig.follow(shooterMotor, true);
         followerConfig.smartCurrentLimit(50);
         followerConfig.voltageCompensation(12);
         followerConfig.idleMode(SparkBaseConfig.IdleMode.kCoast);
