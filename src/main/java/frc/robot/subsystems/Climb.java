@@ -51,7 +51,7 @@ public class Climb extends SubsystemBase {
 
         armFF = new ArmFeedforward(0, 0, 0, 0);
 
-        extensionSolenoid = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1); // TODO: get correct channels
+        extensionSolenoid = new DoubleSolenoid(8, PneumaticsModuleType.CTREPCM, 2, 3); // TODO: get correct channels
 
         SparkMaxConfig leftConfig = new SparkMaxConfig();
         leftConfig

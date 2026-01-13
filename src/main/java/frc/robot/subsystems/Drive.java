@@ -165,7 +165,7 @@ public class Drive extends SubsystemBase {
                                   Math.abs(backRightModule.getDriveVoltage())) / 4.0;
 
         if (Utils.getSpeed2(getRobotRelativeSpeeds()) < 0.1) {
-            System.out.printf("%.4f,%.4f,%.4f,%.4f%n", currentTime, currentAngularVelocity, angularAcceleration, avgDriveVoltage);
+            //System.out.printf("%.4f,%.4f,%.4f,%.4f%n", currentTime, currentAngularVelocity, angularAcceleration, avgDriveVoltage);
         }
 
         lastAngularVelocity = currentAngularVelocity;

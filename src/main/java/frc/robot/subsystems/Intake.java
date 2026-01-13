@@ -22,10 +22,11 @@ public class Intake extends SubsystemBase {
     private final SparkMax intakeSparkMax;
     private final DoubleSolenoid intakeSwitch;
 
+
     public Intake() {
         intakeSparkMax = new SparkMax(53, MotorType.kBrushless);
         SparkMax followerSparkMax = new SparkMax(30, MotorType.kBrushless);
-        intakeSwitch = new DoubleSolenoid(0, PneumaticsModuleType.CTREPCM, 0, 1);
+        intakeSwitch = new DoubleSolenoid(8, PneumaticsModuleType.CTREPCM, 0, 1);
         intakeSparkMax.setVoltage(0);
         var intakeConfig = new SparkMaxConfig();
         intakeConfig.idleMode(IdleMode.kBrake);
