@@ -25,7 +25,7 @@ public class Shooter extends SubsystemBase {
     private final SparkClosedLoopController shooterPID;
 
     private final GenericEntry IDLE_SPEED = Shuffleboard.getTab("Configuration")
-            .add("IDLE SPEED", 0)
+            .add("IDLE SPEED", 6)
             .withWidget(BuiltInWidgets.kNumberSlider)
             .getEntry();
 
@@ -75,7 +75,7 @@ public class Shooter extends SubsystemBase {
         feederConfig.inverted(true);
         feederMotor.configure(feederConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
         this.setDefaultCommand(this.run(() -> {
-            shooterMotor.setVoltage(0);
+            shooterMotor.setVoltage(IDLE_SPEED.getDouble(0));
             setFiring(false);
         }));
     }
@@ -111,10 +111,15 @@ public class Shooter extends SubsystemBase {
             ff = FIRE_BOOST_VOLTAGE.getDouble(0);
         }
 
+        if (Math.abs(speed) < 1) {
+            shooterMotor.setVoltage(0);
+        }
+
         var configValue = SHOOTER_VEL.getDouble(-1);
         if (configValue != -1) {
             speed = SHOOTER_VEL.getDouble(-1);
         }
+
 
         Logger.recordOutput("Shooter/Velocity Setpoint", speed);
         shooterPID.setReference(speed, SparkBase.ControlType.kVelocity, ClosedLoopSlot.kSlot0,

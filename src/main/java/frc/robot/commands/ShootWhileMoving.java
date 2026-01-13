@@ -23,7 +23,7 @@ public class ShootWhileMoving extends Command {
     private final CommandXboxController controller;
 
     private static final Translation2d TARGET_POS = new Translation2d(
-            Units.inchesToMeters(196.11),
+            Units.inchesToMeters(200.11),
             Units.inchesToMeters(158.84));
     private static final double TIME_DELTA = 0.02;
     private static final double FEEDER_HAS_BALL_CURRENT_THRESHOLD = 30; // TODO tune
@@ -70,6 +70,9 @@ public class ShootWhileMoving extends Command {
         var controls = getControls(controller);
         drive.rotationPidDrive(controls.getX(), controls.getY(), targetRotationT0.getRadians(), rotationRateRadT0, rotationAccel);
 
+        var robotPose = drive.getPose();
+        var distance = robotPose.getTranslation().getDistance(targetPositionT0);
+
         // Shooter Control
         double angleError = MathUtil.angleModulus(drive.getPose().getRotation().minus(targetRotationT0).getRadians());
         boolean isAligned = Math.abs(angleError) < SHOOT_ANGLE_RANGE_RAD;
@@ -83,11 +86,8 @@ public class ShootWhileMoving extends Command {
 
         shooter.setShooterSpeed(wantedShooterVelocity, boostTillTime > Timer.getFPGATimestamp());
 
-        boolean shouldFire = isAligned && isAtSpeed;
+        boolean shouldFire = isAligned && isAtSpeed && distance > 2.5;
         shooter.setFiring(shouldFire);
-
-        var robotPose = drive.getPose();
-        var distance = robotPose.getTranslation().getDistance(targetPositionT0);
 
 
         Logger.recordOutput("Shooter/Wanted Velocity", wantedShooterVelocity);
@@ -117,6 +117,9 @@ public class ShootWhileMoving extends Command {
     private double getWantedShooterVelocity(Translation2d targetPosition) {
         var robotPose = drive.getPose();
         var distance = robotPose.getTranslation().getDistance(targetPosition);
-        return 32.95965 * distance * distance + 1490.87513; // TODO: Replace with lookup table or regression
+        if (distance < 2.1) {
+            return 1630;
+        }
+        return 207.79086 * distance + 1191.271;
     }
 }
