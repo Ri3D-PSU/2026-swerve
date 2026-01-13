@@ -93,7 +93,7 @@ public class RobotContainer {
             var path = AsyncPathGenerator.generatePathAsync(finalPathPoint, targetRotation, drive, normConstraints);
             try {
                 var points = path.get().getAllPathPoints();
-                var duration =  Timer.getFPGATimestamp() - time;
+                var duration = Timer.getFPGATimestamp() - time;
                 System.out.println("Generated path " + (i + 1) + "/10. " + points.size() + " points in " + duration + " seconds");
             } catch (Exception e) {
                 System.out.println("Path failed to generate" + e);
@@ -118,13 +118,13 @@ public class RobotContainer {
                     var xInput = -Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED_TELEOP;
                     var yInput = -Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED_TELEOP;
                     var thetaInput = Math.abs(m_driverController.getRightX()) * m_driverController.getRightX() * MAX_ANGULAR_SPEED * -1;
-                    if(drive.shouldBumpAdjust()) {
+                    if (drive.shouldBumpAdjust()) {
                         drive.rotationPidDrive(xInput, yInput, drive.closestBumpAngle(), 0.0, 0.0);
                     } else {
                         drive.drive(xInput, yInput, thetaInput, true);
                     }
 
-                    } , drive));
+                }, drive));
 
 //        m_driverController.b().whileTrue(
 //                getDriveToGoal(new Pose2d(new Translation2d(14.8, 4.09), Rotation2d.fromDegrees(180)), Rotation2d.fromDegrees(0))
@@ -171,7 +171,7 @@ public class RobotContainer {
 
     public void disabledInit() {
         CommandScheduler.getInstance().schedule(
-                Commands.run(() -> drive.setBrakeMode(SparkBaseConfig.IdleMode.kCoast))
+                Commands.runOnce(() -> drive.setBrakeMode(SparkBaseConfig.IdleMode.kCoast))
                         .beforeStarting(Commands.waitSeconds(3.0))
                         .ignoringDisable(true)
         );
@@ -179,7 +179,7 @@ public class RobotContainer {
 
     public void enabledInit() {
         CommandScheduler.getInstance().schedule(
-                Commands.run(() -> drive.setBrakeMode(SparkBaseConfig.IdleMode.kBrake))
+                Commands.runOnce(() -> drive.setBrakeMode(SparkBaseConfig.IdleMode.kBrake))
         );
     }
 }

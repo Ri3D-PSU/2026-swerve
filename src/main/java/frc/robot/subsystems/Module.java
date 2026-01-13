@@ -112,7 +112,7 @@ public class Module {
         if (shouldTurn) {
             turningPID.setReference(desiredState.angle.getRadians(), ControlType.kPosition);
         }
-        
+
         Logger.recordOutput("Drive/Module" + corner + "/DriveCurrent", drivingSparkMax.getOutputCurrent());
         Logger.recordOutput("Drive/Module" + corner + "/DriveVoltage", drivingSparkMax.getAppliedOutput() * drivingSparkMax.getBusVoltage());
         Logger.recordOutput("Drive/Module" + corner + "/DriveVelocity", drivingEncoder.getVelocity());
