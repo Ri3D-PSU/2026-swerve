@@ -137,13 +137,14 @@ public class RobotContainer {
         m_driverController.leftBumper().onTrue(intake.toggleIntake());
 
         m_driverController.rightTrigger().whileTrue(shootCommand);
-//        m_driverController.rightTrigger().whileTrue(Commands.run(
-//                () -> {
-//                    boolean isAtSpeed = shooter.isAtSpeed(1000);
-//                    shooter.setShooterSpeed(1000, false);
-//                    shooter.setFiring(isAtSpeed);
-//                }, shooter
-//        ));
+
+        m_driverController.a().whileTrue(Commands.run(
+                () -> {
+                    boolean isAtSpeed = shooter.isAtSpeed(1700);
+                    shooter.setShooterSpeed(1700, false);
+                    shooter.setFiring(isAtSpeed);
+                }, shooter
+        ));
 
 
         m_driverController.a().whileTrue(Commands.sequence(
@@ -156,13 +157,13 @@ public class RobotContainer {
                 climb.extend(false)
         ));
 
-        m_driverController.x().whileTrue(Commands.sequence(
-                Commands.parallel(
-                        climb.setVoltageWithFeedforward(3, drive).until(() -> drive.getGyroPitch().getDegrees() >= 180),
-                        Commands.run(() -> drive.drive(0.2, 0, 0, true)).until(() -> drive.getGyroPitch().getDegrees() >= 30)
-                ),
-                climb.fixPIDPositionReference(drive.getGyroPitch().getRadians())
-        ));
+//        m_driverController.x().whileTrue(Commands.sequence(
+//                Commands.parallel(
+//                        climb.setVoltageWithFeedforward(3, drive).until(() -> drive.getGyroPitch().getDegrees() >= 180),
+//                        Commands.run(() -> drive.drive(0.2, 0, 0, true)).until(() -> drive.getGyroPitch().getDegrees() >= 30)
+//                ),
+//                climb.fixPIDPositionReference(drive.getGyroPitch().getRadians())
+//        ));
 
         m_driverController.povLeft().onTrue(climb.extend(false));
         m_driverController.povUp().whileTrue(climb.setVoltageWithFeedforward(7, drive)
@@ -178,11 +179,11 @@ public class RobotContainer {
 
     public static Translation2d getControls(CommandXboxController m_driverController) {
 
-//        var xInput = -Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED_TELEOP;
-//        var yInput = -Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED_TELEOP;
+        var xInput = -Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED_TELEOP;
+        var yInput = -Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED_TELEOP;
 
-        var yInput = Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED_TELEOP;
-        var xInput = -Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED_TELEOP;
+//        var yInput = Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED_TELEOP;
+//        var xInput = -Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED_TELEOP;
 
         return new Translation2d(xInput, yInput);
     }

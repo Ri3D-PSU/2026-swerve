@@ -25,7 +25,7 @@ public class Shooter extends SubsystemBase {
     private final SparkClosedLoopController shooterPID;
 
     private final GenericEntry IDLE_SPEED = Shuffleboard.getTab("Configuration")
-            .add("IDLE SPEED", 6)
+            .add("IDLE SPEED", 4.9)
             .withWidget(BuiltInWidgets.kNumberSlider)
             .getEntry();
 
