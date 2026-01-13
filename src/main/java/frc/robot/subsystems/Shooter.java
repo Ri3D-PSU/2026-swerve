@@ -84,8 +84,7 @@ public class Shooter extends SubsystemBase {
 
 
     /**
-     *
-     * @param speed base speed
+     * @param speed       base speed
      * @param firingBoost Apply extra voltage when firing
      */
     public void setShooterSpeed(double speed, boolean firingBoost) {

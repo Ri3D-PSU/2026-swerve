@@ -4,7 +4,9 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.IterativeRobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -14,6 +16,8 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+
+import java.lang.reflect.Field;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -46,6 +50,16 @@ public class Robot extends LoggedRobot {
         }
 
         Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
+
+        try {
+            Field watchDog = IterativeRobotBase.class.getDeclaredField("m_watchdog");
+            watchDog.setAccessible(true);
+            Watchdog actualWatchDog = (Watchdog) watchDog.get(this);
+            actualWatchDog.setTimeout(0.2);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+
 
         m_robotContainer = new RobotContainer();
     }
