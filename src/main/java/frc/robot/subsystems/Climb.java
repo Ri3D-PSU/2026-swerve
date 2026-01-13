@@ -9,6 +9,7 @@ import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 
+import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.Constants;
 import frc.robot.LimelightHelpers;
 import org.littletonrobotics.junction.Logger;
@@ -46,7 +47,7 @@ public class Climb extends SubsystemBase {
     /**
      * Creates a new Climb.
      */
-    public Climb() {
+    public Climb(Drive drive) {
         climbSparkMaxLeft = new SparkMax(23, MotorType.kBrushless);
         leftPID = climbSparkMaxLeft.getClosedLoopController();
         climbSparkMaxRight = new SparkMax(24, MotorType.kBrushless);
@@ -58,14 +59,14 @@ public class Climb extends SubsystemBase {
         SparkMaxConfig leftConfig = new SparkMaxConfig();
         leftConfig
                 .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(40)
+                .smartCurrentLimit(60)
                 .voltageCompensation(12);
 
         SparkMaxConfig rightConfig = new SparkMaxConfig();
         rightConfig
                 .idleMode(IdleMode.kBrake)
                 .follow(climbSparkMaxLeft, false)
-                .smartCurrentLimit(40)
+                .smartCurrentLimit(60)
                 .voltageCompensation(12);
 
         leftConfig.closedLoop
@@ -79,6 +80,7 @@ public class Climb extends SubsystemBase {
 
         climbSparkMaxLeft.configure(leftConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         climbSparkMaxRight.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        this.setDefaultCommand(this.setVoltageWithFeedforward(0, drive));
     }
 
     public Command setVoltageWithFeedforward(double volts, Drive drive) {
@@ -109,7 +111,6 @@ public class Climb extends SubsystemBase {
             }
         });
     }
-
 
     @Override
     public void periodic() {

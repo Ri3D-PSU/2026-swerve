@@ -3,13 +3,17 @@ package frc.robot.commands;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
+import frc.robot.RobotContainer;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Shooter;
 import org.littletonrobotics.junction.Logger;
+
+import static frc.robot.RobotContainer.getControls;
 
 
 public class ShootWhileMoving extends Command {
@@ -17,7 +21,9 @@ public class ShootWhileMoving extends Command {
     private final Shooter shooter;
     private final CommandXboxController controller;
 
-    private static final Translation2d TARGET_POS = new Translation2d(14.8, 4.09);
+    private static final Translation2d TARGET_POS = new Translation2d(
+            Units.inchesToMeters(206.11),
+            Units.inchesToMeters(158.84));
     private static final double TIME_DELTA = 0.02;
     private static final double SHOOTER_VELOCITY_RANGE = 50.0; // Tune this
     private static final double SHOOT_ANGLE_RANGE_RAD = Math.toRadians(2.0);
@@ -63,15 +69,13 @@ public class ShootWhileMoving extends Command {
 
         // Drive Control (Strafing + Aiming)
         // Note: We use the controller inputs for X/Y translation, but override rotation
-        var xInput = -Math.abs(controller.getLeftY()) * controller.getLeftY() * Constants.MAX_LINEAR_SPEED_TELEOP;
-        var yInput = -Math.abs(controller.getLeftX()) * controller.getLeftX() * Constants.MAX_LINEAR_SPEED_TELEOP;
-
-        drive.rotationPidDrive(xInput, yInput, targetRotationT0.getRadians(), rotationRateRadT0, rotationAccel);
+        var controls = getControls(controller);
+        drive.rotationPidDrive(controls.getX(), controls.getY(), targetRotationT0.getRadians(), rotationRateRadT0, rotationAccel);
 
         // Shooter Control
         double angleError = MathUtil.angleModulus(drive.getPose().getRotation().minus(targetRotationT0).getRadians());
         boolean isAligned = Math.abs(angleError) < SHOOT_ANGLE_RANGE_RAD;
-        boolean isAtSpeed = Math.abs(shooter.getShooterVelocity() - wantedShooterVelocity) < SHOOTER_VELOCITY_RANGE;
+        boolean isAtSpeed = shooter.isAtSpeed(wantedShooterVelocity);
 
 
         if (shooter.getFeederCurrent() > FEEDER_HAS_BALL_CURRENT_THRESHOLD) {
@@ -84,9 +88,16 @@ public class ShootWhileMoving extends Command {
         boolean shouldFire = isAligned && isAtSpeed;
         shooter.setFiring(shouldFire);
 
+        var robotPose = drive.getPose();
+        var distance = robotPose.getTranslation().getDistance(targetPositionT0);
+
+
         Logger.recordOutput("Shooter/Wanted Velocity", wantedShooterVelocity);
         Logger.recordOutput("Shooter/Angle Error", angleError);
+        Logger.recordOutput("Shooter/Is Aligned", isAligned);
+        Logger.recordOutput("Shooter/Is At Speed", isAtSpeed);
         Logger.recordOutput("Shooter/Ready To Fire", shouldFire);
+        Logger.recordOutput("Shooter/Distance", distance);
     }
 
     @Override
@@ -99,7 +110,7 @@ public class ShootWhileMoving extends Command {
         // Simple iterative solver for Time of Flight
         for (int i = 0; i < 5; i++) { // 5 iterations is usually enough
             double distance = robotPosition.getDistance(currentTargetPosition);
-            double tof = distance / 5.0; // TODO: Replace 5.0 with actual Note speed curve
+            double tof = 1.2; // TODO: Replace 5.0 with actual Note speed curve
             currentTargetPosition = TARGET_POS.minus(robotVelocity.times(tof));
         }
         return currentTargetPosition;
@@ -108,6 +119,6 @@ public class ShootWhileMoving extends Command {
     private double getWantedShooterVelocity(Translation2d targetPosition) {
         var robotPose = drive.getPose();
         var distance = robotPose.getTranslation().getDistance(targetPosition);
-        return distance * 10; // TODO: Replace with lookup table or regression
+        return 44.09333 * distance * distance + 1528.56193; // TODO: Replace with lookup table or regression
     }
 }

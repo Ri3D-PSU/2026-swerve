@@ -130,7 +130,7 @@ public class Drive extends SubsystemBase {
             var visionStd = calculateVisionStd(megaTag2VisionPose);
 
             var newVisionPose = megaTag2VisionPose.pose;
-            if (visionStd.get(2, 0) < 10.0) {
+            if (visionStd.get(2, 0) < 10.0 && false) {
                 // let's use the megatag1 rotation to update our gyro angle
                 newVisionPose = new Pose2d(
                         megaTag2VisionPose.pose.getTranslation(),
@@ -146,30 +146,11 @@ public class Drive extends SubsystemBase {
         Logger.recordOutput("Last Vision Update", lastVisionTimestamp);
         Logger.recordOutput("Fused Pose", poseEstimator.getEstimatedPosition());
 
+        Logger.recordOutput("Gyro/Roll", getGyroRoll());
+        Logger.recordOutput("Gyro/Pitch", getGyroPitch());
+
 
         field.setRobotPose(poseEstimator.getEstimatedPosition()); // Logs the position for advantagekit
-
-        // Logging for feedforward characterization
-        double currentTime = Timer.getFPGATimestamp();
-        double currentAngularVelocity = Units.degreesToRadians(gyro.getRate());
-        double dt = currentTime - lastLogTime;
-        double angularAcceleration = 0.0;
-
-        if (dt > 0) {
-            angularAcceleration = (currentAngularVelocity - lastAngularVelocity) / dt;
-        }
-
-        double avgDriveVoltage = (Math.abs(frontLeftModule.getDriveVoltage()) +
-                Math.abs(frontRightModule.getDriveVoltage()) +
-                Math.abs(backLeftModule.getDriveVoltage()) +
-                Math.abs(backRightModule.getDriveVoltage())) / 4.0;
-
-        if (Utils.getSpeed2(getRobotRelativeSpeeds()) < 0.1) {
-            //System.out.printf("%.4f,%.4f,%.4f,%.4f%n", currentTime, currentAngularVelocity, angularAcceleration, avgDriveVoltage);
-        }
-
-        lastAngularVelocity = currentAngularVelocity;
-        lastLogTime = currentTime;
     }
 
 
@@ -199,7 +180,7 @@ public class Drive extends SubsystemBase {
     }
 
     public void rotationPidDrive(double x, double y, double angle, double angularVelocity, double angularAcceleration) {
-        double kV = 0.0;
+        double kV = 1.04935;
         double kA = 0.0;
         var thetaSpeed = positionRotationPid.calculate(getPose().getRotation().getRadians(), angle) + angularVelocity * kV + angularAcceleration * kA;
         drive(ChassisSpeeds.fromFieldRelativeSpeeds(x, y, thetaSpeed, getGyroRotation()));
@@ -251,7 +232,7 @@ public class Drive extends SubsystemBase {
 
     PIDController positionTranslationPid = new PIDController(5.0, 0.0, 0.0);
 
-    PIDController positionRotationPid = new PIDController(5.0, 0.0, 0.1);
+    PIDController positionRotationPid = new PIDController(5.0, 0.0, 0.5);
 
 
     {

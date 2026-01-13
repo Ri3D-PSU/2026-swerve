@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -34,7 +35,7 @@ public class RobotContainer {
 
     private final Drive drive = new Drive();
     private final Shooter shooter = new Shooter();
-    private final Climb climb = new Climb();
+    private final Climb climb = new Climb(drive);
     private final Intake intake = new Intake();
 
 
@@ -115,13 +116,12 @@ public class RobotContainer {
     private void configureBindings() {
         drive.setDefaultCommand(
                 new RunCommand(() -> {
-                    var xInput = -Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED_TELEOP;
-                    var yInput = -Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED_TELEOP;
                     var thetaInput = Math.abs(m_driverController.getRightX()) * m_driverController.getRightX() * MAX_ANGULAR_SPEED * -1;
+                    var controls = getControls(m_driverController);
                     if (drive.shouldBumpAdjust()) {
-                        drive.rotationPidDrive(xInput, yInput, drive.closestBumpAngle(), 0.0, 0.0);
+                        drive.rotationPidDrive(controls.getX(), controls.getY(), drive.closestBumpAngle(), 0.0, 0.0);
                     } else {
-                        drive.drive(xInput, yInput, thetaInput, true);
+                        drive.drive(controls.getX(), controls.getY(), thetaInput, true);
                     }
 
                 }, drive));
@@ -135,8 +135,15 @@ public class RobotContainer {
         m_driverController.leftTrigger().and(intake::isExtended).whileTrue(intake.intake());
         m_driverController.rightBumper().and(intake::isExtended).whileTrue(intake.outtake());
         m_driverController.leftBumper().onTrue(intake.toggleIntake());
-        
+
         m_driverController.rightTrigger().whileTrue(shootCommand);
+//        m_driverController.rightTrigger().whileTrue(Commands.run(
+//                () -> {
+//                    boolean isAtSpeed = shooter.isAtSpeed(1000);
+//                    shooter.setShooterSpeed(1000, false);
+//                    shooter.setFiring(isAtSpeed);
+//                }, shooter
+//        ));
 
 
         m_driverController.a().whileTrue(Commands.sequence(
@@ -157,6 +164,19 @@ public class RobotContainer {
                 climb.fixPIDPositionReference(drive.getGyroPitch().getRadians())
         ));
 
+        m_driverController.povLeft().onTrue(climb.extend(false));
+        m_driverController.povUp().whileTrue(climb.setVoltageWithFeedforward(10, drive)
+                .alongWith(climb.extend(true)));
+        m_driverController.povDown().whileTrue(climb.setVoltageWithFeedforward(-10, drive));
+
+    }
+
+
+    public static Translation2d getControls(CommandXboxController m_driverController) {
+        var yInput = Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY() * MAX_LINEAR_SPEED_TELEOP;
+        var xInput = -Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX() * MAX_LINEAR_SPEED_TELEOP;
+
+        return new Translation2d(xInput, yInput);
     }
 
     /**

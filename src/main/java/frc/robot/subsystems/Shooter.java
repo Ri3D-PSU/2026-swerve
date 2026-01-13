@@ -14,6 +14,8 @@ import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
+import static frc.robot.Constants.SHOOTER_VELOCITY_RANGE;
+
 public class Shooter extends SubsystemBase {
 
     private final SparkMax shooterMotor;
@@ -33,15 +35,21 @@ public class Shooter extends SubsystemBase {
             .getEntry();
 
 
+    private final GenericEntry SHOOTER_VEL = Shuffleboard.getTab("Configuration")
+            .add("Shooter Velocity", -1)
+            .withWidget(BuiltInWidgets.kNumberSlider)
+            .getEntry();
+
+
     public Shooter() {
         shooterMotor = new SparkMax(17, SparkLowLevel.MotorType.kBrushless);
         followerMotor = new SparkMax(37, SparkLowLevel.MotorType.kBrushless);
         feederMotor = new SparkMax(58, SparkLowLevel.MotorType.kBrushless);
 
         SparkMaxConfig shooterConfig = new SparkMaxConfig();
-        shooterConfig.closedLoop.pidf(0.1, 0, 0, 0.1); // TODO: tune
-        shooterConfig.smartCurrentLimit(50);
-        shooterConfig.voltageCompensation(12);
+        shooterConfig.closedLoop.pidf(0.001, 0, 0, 0.0003408478); // TODO: tune
+        shooterConfig.smartCurrentLimit(40);
+        shooterConfig.voltageCompensation(11);
         shooterConfig.idleMode(SparkBaseConfig.IdleMode.kCoast);
 
         EncoderConfig encoderConfig = new EncoderConfig();
@@ -54,7 +62,7 @@ public class Shooter extends SubsystemBase {
 
         SparkMaxConfig followerConfig = new SparkMaxConfig();
         followerConfig.follow(shooterMotor, true);
-        followerConfig.smartCurrentLimit(50);
+        followerConfig.smartCurrentLimit(40);
         followerConfig.voltageCompensation(12);
         followerConfig.idleMode(SparkBaseConfig.IdleMode.kCoast);
         followerMotor.configure(followerConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
@@ -64,9 +72,10 @@ public class Shooter extends SubsystemBase {
         feederConfig.smartCurrentLimit(30);
         feederConfig.voltageCompensation(12);
         feederConfig.idleMode(SparkBaseConfig.IdleMode.kBrake);
+        feederConfig.inverted(true);
         feederMotor.configure(feederConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
         this.setDefaultCommand(this.run(() -> {
-            shooterPID.setReference(IDLE_SPEED.getDouble(0), SparkBase.ControlType.kVelocity);
+            shooterMotor.setVoltage(0);
             setFiring(false);
         }));
     }
@@ -81,7 +90,11 @@ public class Shooter extends SubsystemBase {
         Logger.recordOutput("Shooter/Follower Current", followerMotor.getOutputCurrent());
         Logger.recordOutput("Shooter/Feeder Current", feederMotor.getOutputCurrent());
 
+        Logger.recordOutput("Shooter/Applied Output", shooterMotor.getAppliedOutput());
+
+
         Logger.recordOutput("Shooter/Firing", feederMotor.getAppliedOutput() > 0);
+
 
         Logger.recordOutput("Shooter/Idle Speed", IDLE_SPEED.getDouble(0));
         Logger.recordOutput("Shooter/Fire Boost Voltage", FIRE_BOOST_VOLTAGE.getDouble(0));
@@ -97,8 +110,24 @@ public class Shooter extends SubsystemBase {
         if (firingBoost) {
             ff = FIRE_BOOST_VOLTAGE.getDouble(0);
         }
+
+        var configValue = SHOOTER_VEL.getDouble(-1);
+        if (configValue != -1) {
+            speed = SHOOTER_VEL.getDouble(-1);
+        }
+
+        Logger.recordOutput("Shooter/Velocity Setpoint", speed);
         shooterPID.setReference(speed, SparkBase.ControlType.kVelocity, ClosedLoopSlot.kSlot0,
                 ff, SparkClosedLoopController.ArbFFUnits.kVoltage);
+    }
+
+    public boolean isAtSpeed(double speed) {
+        var configValue = SHOOTER_VEL.getDouble(-1);
+        if (configValue != -1) {
+            speed = SHOOTER_VEL.getDouble(-1);
+        }
+        return Math.abs(getShooterVelocity() - speed) < SHOOTER_VELOCITY_RANGE;
+
     }
 
     private static final double FEEDER_FIRING_VOLTAGE = 8;
