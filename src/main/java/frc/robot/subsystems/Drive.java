@@ -106,7 +106,7 @@ public class Drive extends SubsystemBase {
     }
 
 
-    private double lastAngularVelocity = 0.0;
+    private Translation2d lastLinearVelocity = new Translation2d();
     private double lastLogTime = 0.0;
 
     @Override
@@ -149,26 +149,42 @@ public class Drive extends SubsystemBase {
 
         field.setRobotPose(poseEstimator.getEstimatedPosition()); // Logs the position for advantagekit
 
-        // Logging for feedforward characterization
+        // Logging for feedforward characterization (Translation)
         double currentTime = Timer.getFPGATimestamp();
-        double currentAngularVelocity = Units.degreesToRadians(gyro.getRate());
+        ChassisSpeeds robotSpeeds = getRobotRelativeSpeeds();
+        Translation2d currentLinearVelocity = new Translation2d(robotSpeeds.vxMetersPerSecond, robotSpeeds.vyMetersPerSecond);
+        
         double dt = currentTime - lastLogTime;
-        double angularAcceleration = 0.0;
+        Translation2d linearAcceleration = new Translation2d();
         
         if (dt > 0) {
-             angularAcceleration = (currentAngularVelocity - lastAngularVelocity) / dt;
+             linearAcceleration = currentLinearVelocity.minus(lastLinearVelocity).div(dt);
         }
 
-        double avgDriveVoltage = (Math.abs(frontLeftModule.getDriveVoltage()) + 
-                                  Math.abs(frontRightModule.getDriveVoltage()) + 
-                                  Math.abs(backLeftModule.getDriveVoltage()) + 
-                                  Math.abs(backRightModule.getDriveVoltage())) / 4.0;
+        double velocityMag = currentLinearVelocity.getNorm();
+        double accelMag = linearAcceleration.getNorm();
 
-        if (Utils.getSpeed2(getRobotRelativeSpeeds()) < 0.1) {
-            System.out.printf("%.4f,%.4f,%.4f,%.4f%n", currentTime, currentAngularVelocity, angularAcceleration, avgDriveVoltage);
+        // Calculate cosine of angle between velocity and acceleration
+        double cosTheta = 0.0;
+        if (velocityMag > 1e-3 && accelMag > 1e-3) {
+            cosTheta = (currentLinearVelocity.getX() * linearAcceleration.getX() + currentLinearVelocity.getY() * linearAcceleration.getY()) / (velocityMag * accelMag);
         }
 
-        lastAngularVelocity = currentAngularVelocity;
+        // Check if vectors are roughly parallel or anti-parallel (angle within ~25 degrees or 155-180 degrees)
+        if (Math.abs(cosTheta) > 0.9) {
+             double avgDriveVoltage = (Math.abs(frontLeftModule.getDriveVoltage()) + 
+                                       Math.abs(frontRightModule.getDriveVoltage()) + 
+                                       Math.abs(backLeftModule.getDriveVoltage()) + 
+                                       Math.abs(backRightModule.getDriveVoltage())) / 4.0;
+            
+             // Project acceleration onto velocity direction (positive if speeding up, negative if slowing down)
+             // Since we checked for collinearity, this is roughly just magnitude * sign(dot)
+             double projectedAccel = accelMag * Math.signum(cosTheta);
+
+             System.out.printf("%.4f,%.4f,%.4f,%.4f%n", currentTime, velocityMag, projectedAccel, avgDriveVoltage);
+        }
+
+        lastLinearVelocity = currentLinearVelocity;
         lastLogTime = currentTime;
     }
 
