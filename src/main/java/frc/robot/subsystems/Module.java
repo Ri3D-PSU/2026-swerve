@@ -63,7 +63,7 @@ public class Module {
 
         SparkMaxConfig drivingConfig = new SparkMaxConfig();
         drivingConfig
-                .idleMode(IdleMode.kBrake)
+                .idleMode(IdleMode.kCoast)
                 .inverted(true)
                 .smartCurrentLimit(40)
                 .voltageCompensation(12);

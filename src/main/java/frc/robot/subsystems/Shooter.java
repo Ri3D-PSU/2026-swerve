@@ -75,7 +75,7 @@ public class Shooter extends SubsystemBase {
         feederConfig.inverted(true);
         feederMotor.configure(feederConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
         this.setDefaultCommand(this.run(() -> {
-            shooterMotor.setVoltage(IDLE_SPEED.getDouble(0));
+            shooterMotor.setVoltage(0);
             setFiring(false);
         }));
     }

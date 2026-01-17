@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.Drive;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
 import org.littletonrobotics.junction.Logger;
 
@@ -19,6 +20,7 @@ import static frc.robot.RobotContainer.getControls;
 
 public class ShootWhileMoving extends Command {
     private final Drive drive;
+    private final Intake intake;
     private final Shooter shooter;
     private final CommandXboxController controller;
 
@@ -30,10 +32,11 @@ public class ShootWhileMoving extends Command {
     private static final double SHOOT_BOOST_TIME_S = 0.4;
     private double boostTillTime = 0;
 
-    public ShootWhileMoving(Drive drive, Shooter shooter, CommandXboxController controller) {
+    public ShootWhileMoving(Drive drive, Shooter shooter, CommandXboxController controller, Intake intake) {
         this.drive = drive;
         this.shooter = shooter;
         this.controller = controller;
+        this.intake = intake;
         addRequirements(drive, shooter);
     }
 
@@ -45,6 +48,7 @@ public class ShootWhileMoving extends Command {
 
     @Override
     public void execute() {
+
         // Prediction Math
         Translation2d robotVelocity = new Translation2d(drive.getFieldRelativeSpeeds().vxMetersPerSecond, drive.getFieldRelativeSpeeds().vyMetersPerSecond);
         Translation2d robotPositionT0 = drive.getPose().getTranslation();

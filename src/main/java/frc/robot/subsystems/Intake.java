@@ -29,14 +29,14 @@ public class Intake extends SubsystemBase {
         intakeSparkMax.setVoltage(0);
         var intakeConfig = new SparkMaxConfig();
         intakeConfig.inverted(true);
-        intakeConfig.idleMode(IdleMode.kBrake);
+        intakeConfig.idleMode(IdleMode.kCoast);
         intakeConfig.smartCurrentLimit(30);
         intakeConfig.voltageCompensation(12);
         intakeSparkMax.configure(intakeConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
         this.setDefaultCommand(this.run(() -> intakeSparkMax.setVoltage(0)));
 
         var followerConfig = new SparkMaxConfig();
-        followerConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(30).voltageCompensation(12).follow(53, true);
+        followerConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(30).voltageCompensation(12).follow(53, true);
         followerSparkMax.configure(followerConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
     }
 

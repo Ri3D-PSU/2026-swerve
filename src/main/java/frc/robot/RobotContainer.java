@@ -41,7 +41,7 @@ public class RobotContainer {
 
     private final CommandXboxController m_driverController = new CommandXboxController(0);
 
-    private final Command shootCommand = new ShootWhileMoving(drive, shooter, m_driverController);
+    private final Command shootCommand = new ShootWhileMoving(drive, shooter, m_driverController, intake);
 
 
     private Future<PathPlannerPath> onTheFlyPath = null;
@@ -136,7 +136,7 @@ public class RobotContainer {
         m_driverController.rightBumper().and(intake::isExtended).whileTrue(intake.outtake());
         m_driverController.leftBumper().onTrue(intake.toggleIntake());
 
-        m_driverController.rightTrigger().whileTrue(shootCommand);
+        m_driverController.rightTrigger().whileTrue(Commands.parallel(shootCommand));
 
         m_driverController.a().whileTrue(Commands.run(
                 () -> {
@@ -145,6 +145,8 @@ public class RobotContainer {
                     shooter.setFiring(isAtSpeed);
                 }, shooter
         ));
+
+        m_driverController.b().whileTrue(Commands.run(() -> shooter.setFiring(true)));
 
 
 //        m_driverController.a().whileTrue(Commands.sequence(
@@ -166,7 +168,7 @@ public class RobotContainer {
 //        ));
 
         m_driverController.povLeft().onTrue(climb.extend(false));
-        m_driverController.povUp().whileTrue(climb.setVoltageWithFeedforward(7, drive)
+        m_driverController.povUp().whileTrue(climb.setVoltageWithFeedforward(12, drive)
                 .alongWith(climb.extend(true)));
         m_driverController.povDown().onTrue(Commands.run(() -> {
             shooter.setFiring(false);
