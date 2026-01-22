@@ -10,6 +10,9 @@ import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import frc.robot.Constants;
 import frc.robot.LimelightHelpers;
 import org.littletonrobotics.junction.Logger;
@@ -39,10 +42,16 @@ public class Climb extends SubsystemBase {
     private SparkMax climbSparkMaxRight;
 
     private ArmFeedforward armFF;
+    private double lastFF = 0;
 
     private final double CLIMB_RATIO = 180; // This is either the rotation or height of the arm depending on which gets chosen
 
     private DoubleSolenoid extensionSolenoid;
+
+    private final GenericEntry CLIMB_VOLTAGE = Shuffleboard.getTab("Configuration")
+            .add("CLIMB VOLTAGE", 6)
+            .withWidget(BuiltInWidgets.kNumberSlider)
+            .getEntry();
 
     /**
      * Creates a new Climb.
@@ -80,14 +89,19 @@ public class Climb extends SubsystemBase {
 
         climbSparkMaxLeft.configure(leftConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         climbSparkMaxRight.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        this.setDefaultCommand(this.setVoltageWithFeedforward(0, drive));
+        this.setDefaultCommand(this.setVoltageWithFeedforward(0, drive, false));
     }
 
-    public Command setVoltageWithFeedforward(double volts, Drive drive) {
+    public Command setVoltageWithFeedforward(double volts, Drive drive, boolean useIdle) {
         return Commands.run(
                 () -> {
                     double FF = armFF.calculate(drive.getGyroPitch().getRadians(), 0);
-                    climbSparkMaxLeft.setVoltage(volts + FF);
+                    if(useIdle) {
+                        climbSparkMaxLeft.setVoltage(CLIMB_VOLTAGE.getDouble(0) + FF);
+                    } else {
+                        climbSparkMaxLeft.setVoltage(volts + FF);
+                    }
+
                 },
                 this);
     }
@@ -96,6 +110,7 @@ public class Climb extends SubsystemBase {
         return Commands.runOnce(() -> {
             // Because feedforward is continuously calculated
             double FF = armFF.calculate(currentAngle, 0);
+            lastFF = FF;
             leftPID.setReference(climbSparkMaxLeft.getEncoder().getPosition(), ControlType.kPosition, ClosedLoopSlot.kSlot0, FF, SparkClosedLoopController.ArbFFUnits.kVoltage);
         });
     }
@@ -118,5 +133,6 @@ public class Climb extends SubsystemBase {
         Logger.recordOutput("Climber/Right Motor Current", climbSparkMaxRight.getOutputCurrent());
         Logger.recordOutput("Climber/Left Motor Applied Output", climbSparkMaxLeft.getAppliedOutput());
         Logger.recordOutput("Climber/Right Motor Applied Output", climbSparkMaxRight.getAppliedOutput());
+        Logger.recordOutput("Climber FeedForward", lastFF);
     }
 }

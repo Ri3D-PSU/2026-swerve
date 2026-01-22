@@ -168,13 +168,13 @@ public class RobotContainer {
 //        ));
 
         m_driverController.povLeft().onTrue(climb.extend(false));
-        m_driverController.povUp().whileTrue(climb.setVoltageWithFeedforward(12, drive)
+        m_driverController.povUp().whileTrue(climb.setVoltageWithFeedforward(12, drive, true)
                 .alongWith(climb.extend(true)));
         m_driverController.povDown().onTrue(Commands.run(() -> {
             shooter.setFiring(false);
             shooter.setShooterSpeed(0, false);
         }, shooter));
-        m_driverController.povDown().whileTrue(climb.setVoltageWithFeedforward(-7, drive));
+        m_driverController.povDown().whileTrue(climb.setVoltageWithFeedforward(-7, drive, false));
 
     }
 
