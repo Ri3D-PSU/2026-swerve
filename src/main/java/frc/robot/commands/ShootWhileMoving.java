@@ -121,9 +121,6 @@ public class ShootWhileMoving extends Command {
     private double getWantedShooterVelocity(Translation2d targetPosition) {
         var robotPose = drive.getPose();
         var distance = robotPose.getTranslation().getDistance(targetPosition);
-        if (distance < 2.1) {
-            return 1630;
-        }
-        return 207.79086 * distance + 1191.271;
+        return shooter.getWantedVelocity(distance);
     }
 }

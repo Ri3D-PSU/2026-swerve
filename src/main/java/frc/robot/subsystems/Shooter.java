@@ -5,6 +5,7 @@ import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -13,6 +14,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
+
+import java.util.Arrays;
 
 import static frc.robot.Constants.SHOOTER_VELOCITY_RANGE;
 
@@ -24,6 +27,20 @@ public class Shooter extends SubsystemBase {
     private final SparkMax feederMotor;
     private final SparkClosedLoopController shooterPID;
 
+    private final InterpolatingDoubleTreeMap speedMap = new InterpolatingDoubleTreeMap();
+    private double[] lastMapData = new double[0];
+
+    private final GenericEntry SPEED_MAP_ENTRY = Shuffleboard.getTab("Configuration")
+            .add("Shooter Speed Map", new double[] {
+                    1.0, 1630.0,
+                    2.1, 1630.0,
+                    3.0, 1814.0,
+                    4.0, 2022.0,
+                    5.0, 2230.0,
+                    6.0, 2438.0
+            })
+            .getEntry();
+
     private final GenericEntry IDLE_SPEED = Shuffleboard.getTab("Configuration")
             .add("IDLE SPEED", 4.9)
             .withWidget(BuiltInWidgets.kNumberSlider)
@@ -34,12 +51,10 @@ public class Shooter extends SubsystemBase {
             .withWidget(BuiltInWidgets.kNumberSlider)
             .getEntry();
 
-
     private final GenericEntry SHOOTER_VEL = Shuffleboard.getTab("Configuration")
             .add("Shooter Velocity", -1)
             .withWidget(BuiltInWidgets.kNumberSlider)
             .getEntry();
-
 
     public Shooter() {
         shooterMotor = new SparkMax(17, SparkLowLevel.MotorType.kBrushless);
@@ -56,7 +71,8 @@ public class Shooter extends SubsystemBase {
         encoderConfig.velocityConversionFactor(1.0 / 2.0);
         encoderConfig.positionConversionFactor(1.0 / 2.0);
         shooterConfig.apply(encoderConfig);
-        shooterMotor.configure(shooterConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
+        shooterMotor.configure(shooterConfig, SparkBase.ResetMode.kResetSafeParameters,
+                SparkBase.PersistMode.kPersistParameters);
 
         shooterPID = shooterMotor.getClosedLoopController();
 
@@ -65,15 +81,16 @@ public class Shooter extends SubsystemBase {
         followerConfig.smartCurrentLimit(40);
         followerConfig.voltageCompensation(12);
         followerConfig.idleMode(SparkBaseConfig.IdleMode.kCoast);
-        followerMotor.configure(followerConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
-
+        followerMotor.configure(followerConfig, SparkBase.ResetMode.kResetSafeParameters,
+                SparkBase.PersistMode.kPersistParameters);
 
         SparkMaxConfig feederConfig = new SparkMaxConfig();
         feederConfig.smartCurrentLimit(30);
         feederConfig.voltageCompensation(12);
         feederConfig.idleMode(SparkBaseConfig.IdleMode.kBrake);
         feederConfig.inverted(true);
-        feederMotor.configure(feederConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
+        feederMotor.configure(feederConfig, SparkBase.ResetMode.kResetSafeParameters,
+                SparkBase.PersistMode.kPersistParameters);
         this.setDefaultCommand(this.run(() -> {
             shooterMotor.setVoltage(0);
             setFiring(false);
@@ -82,6 +99,16 @@ public class Shooter extends SubsystemBase {
 
     @Override
     public void periodic() {
+        double[] mapData = SPEED_MAP_ENTRY.getDoubleArray(new double[0]);
+        if (!Arrays.equals(mapData, lastMapData)) {
+            speedMap.clear();
+            for (int i = 0; i < mapData.length - 1; i += 2) {
+                speedMap.put(mapData[i], mapData[i + 1]);
+            }
+            lastMapData = mapData;
+            System.out.println("Speed Map Updated!");
+        }
+
         Logger.recordOutput("Shooter/Main Velocity", shooterMotor.getEncoder().getVelocity());
         Logger.recordOutput("Shooter/Follower Velocity", followerMotor.getEncoder().getVelocity());
         Logger.recordOutput("Shooter/Feeder Velocity", feederMotor.getEncoder().getVelocity());
@@ -92,14 +119,11 @@ public class Shooter extends SubsystemBase {
 
         Logger.recordOutput("Shooter/Applied Output", shooterMotor.getAppliedOutput());
 
-
         Logger.recordOutput("Shooter/Firing", feederMotor.getAppliedOutput() > 0);
-
 
         Logger.recordOutput("Shooter/Idle Speed", IDLE_SPEED.getDouble(0));
         Logger.recordOutput("Shooter/Fire Boost Voltage", FIRE_BOOST_VOLTAGE.getDouble(0));
     }
-
 
     /**
      * @param speed       base speed
@@ -120,7 +144,6 @@ public class Shooter extends SubsystemBase {
             speed = SHOOTER_VEL.getDouble(-1);
         }
 
-
         Logger.recordOutput("Shooter/Velocity Setpoint", speed);
         shooterPID.setReference(speed, SparkBase.ControlType.kVelocity, ClosedLoopSlot.kSlot0,
                 ff, SparkClosedLoopController.ArbFFUnits.kVoltage);
@@ -137,13 +160,16 @@ public class Shooter extends SubsystemBase {
 
     private static final double FEEDER_FIRING_VOLTAGE = 8;
 
-
     public void setFiring(boolean isFiring) {
         feederMotor.setVoltage(isFiring ? FEEDER_FIRING_VOLTAGE : 0);
     }
 
     public double getShooterVelocity() {
         return shooterMotor.getEncoder().getVelocity();
+    }
+
+    public double getWantedVelocity(double distance) {
+        return speedMap.get(distance);
     }
 
     public double getFeederCurrent() {
