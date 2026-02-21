@@ -1,6 +1,7 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.MathUtil;
@@ -77,6 +78,11 @@ public class RobotContainer {
     }
 
     public RobotContainer() {
+        NamedCommands.registerCommand("shoot command", Commands.repeatingSequence(new ShootWhileMoving(drive, shooter, m_driverController, intake)).withTimeout(6));
+        NamedCommands.registerCommand("toggle intake", intake.toggleIntake());
+        NamedCommands.registerCommand("intake", Commands.repeatingSequence(intake.intake()).withTimeout(3));
+
+
         // Warm up path planner
         System.out.println("Warming up path planner");
         for (int i = 0; i < 10; i++) {
@@ -96,6 +102,7 @@ public class RobotContainer {
                 System.out.println("Path failed to generate" + e);
             }
         }
+
 
         configureBindings();
     }
@@ -247,11 +254,13 @@ public class RobotContainer {
             theta = 0;
         }
 
-        return Commands.sequence(
-            Commands.runOnce(() -> drive.resetPose(new Pose2d(drive.getPose().getX(), drive.getPose().getY(), Rotation2d.fromDegrees(theta)))),
-            Commands.repeatingSequence(new ShootWhileMoving(drive, shooter, m_driverController, intake)).withTimeout(6),
-            AutoBuilder.followPath(PathPlannerPath.fromPathFile("p1"))
-        );
+        return AutoBuilder.buildAuto("New Auto");
+//
+//        return Commands.sequence(
+//            Commands.runOnce(() -> drive.resetPose(new Pose2d(drive.getPose().getX(), drive.getPose().getY(), Rotation2d.fromDegrees(theta)))),
+//            Commands.repeatingSequence(new ShootWhileMoving(drive, shooter, m_driverController, intake)).withTimeout(6)
+//            //AutoBuilder.followPath(PathPlannerPath.fromPathFile("p1"))
+//        );
     }
 
     public void disabledInit() {

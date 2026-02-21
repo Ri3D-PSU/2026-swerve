@@ -5,9 +5,46 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "shoot command"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "p1"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "intake"
+                }
+              }
+            ]
+          }
+        },
+        {
           "type": "path",
           "data": {
-            "pathName": "p1"
+            "pathName": "p2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "toggle intake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot command"
           }
         }
       ]
