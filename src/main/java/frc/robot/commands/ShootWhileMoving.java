@@ -53,8 +53,14 @@ public class ShootWhileMoving extends Command {
         Translation2d robotPositionT0 = drive.getPose().getTranslation();
 
         var linearVelocity = robotVelocity.getNorm();
-        var timeTillStop = Math.min(0.3, linearVelocity / drive.getGyroAcceleration());
+        var linnearAccel = drive.getGyroAcceleration();
+        double timeTillStop;
 
+        if (linnearAccel < 0.05) {
+            timeTillStop = 0.3;
+        } else {
+            timeTillStop = Math.min(0.3, linearVelocity / linnearAccel);
+        }
         Translation2d robotShootPosition = robotPositionT0.plus(robotVelocity.times(timeTillStop));
         Rotation2d targetRotation = TARGET_POS.minus(robotShootPosition).getAngle();
         double wantedShooterVelocity = getWantedShooterVelocity(TARGET_POS);
