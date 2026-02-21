@@ -17,7 +17,11 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.util.Arrays;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -25,6 +29,8 @@ import java.lang.reflect.Field;
  * this project, you must also update the Main.java file in the project.
  */
 public class Robot extends LoggedRobot {
+    private static final String LOG_DIRECTORY = "/home/lvuser/logs";
+    private static final long MIN_FREE_SPACE = 100000000;
     private Command m_autonomousCommand;
 
     private final RobotContainer m_robotContainer;
@@ -37,10 +43,47 @@ public class Robot extends LoggedRobot {
         // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         // autonomous chooser on the dashboard.
 
-        Logger.recordMetadata("ProjectName", "MyProject"); // Set a metadata value
+        Logger.recordMetadata("ProjectName", "Ri3DPSU-2026"); // Set a metadata value
+
+        if (isReal()) {
+            var directory = new File(LOG_DIRECTORY);
+            if (!directory.exists()) {
+                directory.mkdir();
+            }
+
+            // ensure that there is enough space on the roboRIO to log data
+            if (directory.getFreeSpace() < MIN_FREE_SPACE) {
+                var files = directory.listFiles();
+                if (files != null) {
+                    // Sorting the files by name will ensure that the oldest files are deleted first
+                    files = Arrays.stream(files).sorted().toArray(File[]::new);
+
+                    long bytesToDelete = MIN_FREE_SPACE - directory.getFreeSpace();
+
+                    for (File file : files) {
+                        if (file.getName().endsWith(".wpilog")) {
+                            try {
+                                bytesToDelete -= Files.size(file.toPath());
+                            } catch (IOException e) {
+                                System.out.println("Failed to get size of file " + file.getName());
+                                continue;
+                            }
+                            if (file.delete()) {
+                                System.out.println("Deleted " + file.getName() + " to free up space");
+                            } else {
+                                System.out.println("Failed to delete " + file.getName());
+                            }
+                            if (bytesToDelete <= 0) {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         if (isReal() || true) {
-//      Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
+            Logger.addDataReceiver(new WPILOGWriter(LOG_DIRECTORY)); // Log to a USB stick ("/U/logs")
             Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
         } else {
             setUseTiming(false); // Run as fast as possible
@@ -69,7 +112,7 @@ public class Robot extends LoggedRobot {
      * that you want ran during disabled, autonomous, teleoperated and test.
      *
      * <p>This runs after the mode specific periodic functions, but before LiveWindow and
-     * SmartDashboard integrated updating.
+     * SmartDashboard integraDted updating.
      */
     @Override
     public void robotPeriodic() {
