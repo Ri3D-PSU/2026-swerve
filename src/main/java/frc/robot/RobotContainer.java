@@ -210,8 +210,23 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        // An example command will be run in autonomous
-        return null;
+
+        var isRed = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Red;
+        double xInput;
+        double theta;
+        if(isRed) {
+            xInput = -0.5;
+            theta = 180;
+        } else {
+            xInput = 0.5;
+            theta = 0;
+        }
+
+        return Commands.sequence(
+            Commands.runOnce(() -> drive.resetPose(new Pose2d(0, 0, Rotation2d.fromDegrees(theta)))),
+            Commands.repeatingSequence(shootCommand).withTimeout(5),
+            Commands.run(() -> drive.drive(xInput, 0, 0, true)).withTimeout(5)
+            );
     }
 
 
