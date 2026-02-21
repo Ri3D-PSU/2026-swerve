@@ -47,33 +47,33 @@ public class RobotContainer {
 
     public Command getDriveToGoal(Pose2d finalPathPoint, Rotation2d targetRotation, PathConstraints constraints) {
         return Commands.sequence(
-                Commands.runOnce(() -> {
-                    onTheFlyPath = AsyncPathGenerator.generatePathAsync(finalPathPoint, targetRotation, drive,
-                            constraints);
-                }),
-                Commands.waitUntil(() -> onTheFlyPath.isDone()),
-                Commands.race(
-                        Commands.defer(
-                                () -> {
-                                    try {
-                                        return AutoBuilder.followPath(onTheFlyPath.get());
-                                    } catch (Exception e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                },
-                                Set.of(drive)),
-                        Commands.waitUntil(
-                                () -> drive.getPose().getTranslation().minus(finalPathPoint.getTranslation())
-                                        .getNorm() < Constants.PATH_FINISH_CLOSE_DISTANCE_M &&
-                                        MathUtil.angleModulus(drive.getPose().getRotation().minus(targetRotation)
-                                                .getRadians()) < ANGLE_CLOSE_RAD
-                                        &&
-                                        getSpeed2(drive.getRobotRelativeSpeeds()) < 0.1)),
-                Commands.race(
-                        drive.pidToPosition(new Pose2d(finalPathPoint.getTranslation(), targetRotation)),
-                        Commands.waitUntil(
-                                () -> drive.getPose().getTranslation().minus(finalPathPoint.getTranslation())
-                                        .getNorm() < Constants.PATH_FINISH_CLOSE_DISTANCE_M_PID)));
+            Commands.runOnce(() -> {
+                onTheFlyPath = AsyncPathGenerator.generatePathAsync(finalPathPoint, targetRotation, drive,
+                    constraints);
+            }),
+            Commands.waitUntil(() -> onTheFlyPath.isDone()),
+            Commands.race(
+                Commands.defer(
+                    () -> {
+                        try {
+                            return AutoBuilder.followPath(onTheFlyPath.get());
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    },
+                    Set.of(drive)),
+                Commands.waitUntil(
+                    () -> drive.getPose().getTranslation().minus(finalPathPoint.getTranslation())
+                        .getNorm() < Constants.PATH_FINISH_CLOSE_DISTANCE_M &&
+                        MathUtil.angleModulus(drive.getPose().getRotation().minus(targetRotation)
+                            .getRadians()) < ANGLE_CLOSE_RAD
+                        &&
+                        getSpeed2(drive.getRobotRelativeSpeeds()) < 0.1)),
+            Commands.race(
+                drive.pidToPosition(new Pose2d(finalPathPoint.getTranslation(), targetRotation)),
+                Commands.waitUntil(
+                    () -> drive.getPose().getTranslation().minus(finalPathPoint.getTranslation())
+                        .getNorm() < Constants.PATH_FINISH_CLOSE_DISTANCE_M_PID)));
     }
 
     public RobotContainer() {
@@ -81,8 +81,8 @@ public class RobotContainer {
         System.out.println("Warming up path planner");
         for (int i = 0; i < 10; i++) {
             var finalPathPoint = new Pose2d(
-                    new Translation2d(Math.random() * 10 - 5, Math.random() * 10 - 5),
-                    Rotation2d.fromDegrees(Math.random() * 360));
+                new Translation2d(Math.random() * 10 - 5, Math.random() * 10 - 5),
+                Rotation2d.fromDegrees(Math.random() * 360));
 
             Rotation2d targetRotation = Rotation2d.fromDegrees(Math.random() * 360);
             var time = Timer.getFPGATimestamp();
@@ -91,7 +91,7 @@ public class RobotContainer {
                 var points = path.get().getAllPathPoints();
                 var duration = Timer.getFPGATimestamp() - time;
                 System.out.println(
-                        "Generated path " + (i + 1) + "/10. " + points.size() + " points in " + duration + " seconds");
+                    "Generated path " + (i + 1) + "/10. " + points.size() + " points in " + duration + " seconds");
             } catch (Exception e) {
                 System.out.println("Path failed to generate" + e);
             }
@@ -116,37 +116,53 @@ public class RobotContainer {
      */
     private void configureBindings() {
         drive.setDefaultCommand(
-                new RunCommand(() -> {
-                    var thetaInput = Math.abs(m_driverController.getRightX()) * m_driverController.getRightX()
-                            * MAX_ANGULAR_SPEED * -1;
-                    var controls = getControls(m_driverController);
-                    if (drive.shouldBumpAdjust()) {
-                        drive.rotationPidDrive(controls.getX(), controls.getY(), drive.closestBumpAngle(), 0.0, 0.0);
-                    } else {
-                        drive.drive(controls.getX(), controls.getY(), thetaInput, true);
-                    }
+            new RunCommand(() -> {
+                var thetaInput = Math.abs(m_driverController.getRightX()) * m_driverController.getRightX()
+                    * MAX_ANGULAR_SPEED * -1;
+                var controls = getControls(m_driverController);
+                if (drive.shouldBumpAdjust()) {
+                    drive.rotationPidDrive(controls.getX(), controls.getY(), drive.closestBumpAngle(), 0.0, 0.0);
+                } else {
+                    drive.drive(controls.getX(), controls.getY(), thetaInput, true);
+                }
 
-                }, drive));
+            }, drive));
 
         // m_driverController.b().whileTrue(
         // getDriveToGoal(new Pose2d(new Translation2d(14.8, 4.09),
         // Rotation2d.fromDegrees(180)), Rotation2d.fromDegrees(0))
         // );
+        var restHeadingCommand = Commands.runOnce(drive::zeroPose, drive);
+        restHeadingCommand.runsWhenDisabled();
+        m_driverController.start().onTrue(restHeadingCommand);
 
-        m_driverController.start().onTrue(Commands.runOnce(drive::zeroPose, drive));
-
-        m_driverController.leftTrigger().and(intake::isExtended).whileTrue(intake.intake());
-        m_driverController.rightBumper().and(intake::isExtended).whileTrue(intake.outtake());
-        m_driverController.leftBumper().onTrue(intake.toggleIntake());
+        m_driverController.leftTrigger().whileTrue(intake.intake());
+        m_driverController.leftBumper().whileTrue(intake.outtake());
+        m_driverController.rightBumper().onTrue(intake.toggleIntake());
 
         m_driverController.rightTrigger().whileTrue(Commands.parallel(shootCommand));
 
         m_driverController.a().whileTrue(Commands.run(
-                () -> {
-                    boolean isAtSpeed = shooter.isAtSpeed(1700);
-                    shooter.setShooterSpeed(1700, false);
-                    shooter.setFiring(isAtSpeed);
-                }, shooter));
+            () -> {
+                boolean isAtSpeed = shooter.isAtSpeed(1700);
+                shooter.setShooterSpeed(1700, false);
+                shooter.setFiring(isAtSpeed);
+            }, shooter));
+
+        m_driverController.y().whileTrue(Commands.runEnd(
+            () -> {
+                shooter.setShooterSpeed(-1700, false);
+                shooter.setOuttake();
+            }, () -> {
+                shooter.setShooterSpeed(0, false);
+                shooter.setFiring(false);
+            }, shooter));
+
+
+        m_driverController.x().whileTrue(Commands.run(
+            () -> {
+                shooter.setShooterSpeed(1700, false);
+            }, shooter));
 
         m_driverController.b().whileTrue(Commands.run(() -> shooter.setFiring(true)));
 
@@ -175,7 +191,7 @@ public class RobotContainer {
 
         m_driverController.povLeft().onTrue(climb.extend(false));
         m_driverController.povUp().whileTrue(climb.setVoltageWithFeedforward(12, drive, true)
-                .alongWith(climb.extend(true)));
+            .alongWith(climb.extend(true)));
         m_driverController.povDown().onTrue(Commands.run(() -> {
             shooter.setFiring(false);
             shooter.setShooterSpeed(0, false);
@@ -200,14 +216,14 @@ public class RobotContainer {
         double yInput;
         if (!isRed) {
             xInput = -Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY()
-                    * MAX_LINEAR_SPEED_TELEOP;
+                * MAX_LINEAR_SPEED_TELEOP;
             yInput = -Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX()
-                    * MAX_LINEAR_SPEED_TELEOP;
+                * MAX_LINEAR_SPEED_TELEOP;
         } else {
             xInput = Math.abs(m_driverController.getLeftY()) * m_driverController.getLeftY()
-                    * MAX_LINEAR_SPEED_TELEOP;
+                * MAX_LINEAR_SPEED_TELEOP;
             yInput = Math.abs(m_driverController.getLeftX()) * m_driverController.getLeftX()
-                    * MAX_LINEAR_SPEED_TELEOP;
+                * MAX_LINEAR_SPEED_TELEOP;
         }
 
         return new Translation2d(xInput, yInput);
@@ -223,30 +239,30 @@ public class RobotContainer {
         var isRed = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Red;
         double xInput;
         double theta;
-        if(isRed) {
-            xInput = -0.5;
+        if (isRed) {
+            xInput = 0.5;
             theta = 180;
         } else {
-            xInput = 0.5;
+            xInput = -0.5;
             theta = 0;
         }
 
         return Commands.sequence(
-            Commands.runOnce(() -> drive.resetPose(new Pose2d(0, 0, Rotation2d.fromDegrees(theta)))),
-            Commands.repeatingSequence(shootCommand).withTimeout(5),
-            Commands.run(() -> drive.drive(xInput, 0, 0, true)).withTimeout(5)
-            );
+            Commands.runOnce(() -> drive.resetPose(new Pose2d(drive.getPose().getX(), drive.getPose().getY(), Rotation2d.fromDegrees(theta)))),
+            Commands.repeatingSequence(new ShootWhileMoving(drive, shooter, m_driverController, intake)).withTimeout(6),
+            AutoBuilder.followPath(PathPlannerPath.fromPathFile("p1"))
+        );
     }
 
     public void disabledInit() {
         CommandScheduler.getInstance().schedule(
-                Commands.runOnce(() -> drive.setBrakeMode(SparkBaseConfig.IdleMode.kCoast))
-                        .beforeStarting(Commands.waitSeconds(3.0))
-                        .ignoringDisable(true));
+            Commands.runOnce(() -> drive.setBrakeMode(SparkBaseConfig.IdleMode.kCoast))
+                .beforeStarting(Commands.waitSeconds(3.0))
+                .ignoringDisable(true));
     }
 
     public void enabledInit() {
         CommandScheduler.getInstance().schedule(
-                Commands.runOnce(() -> drive.setBrakeMode(SparkBaseConfig.IdleMode.kBrake)));
+            Commands.runOnce(() -> drive.setBrakeMode(SparkBaseConfig.IdleMode.kBrake)));
     }
 }

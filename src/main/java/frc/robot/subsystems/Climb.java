@@ -49,9 +49,9 @@ public class Climb extends SubsystemBase {
     private DoubleSolenoid extensionSolenoid;
 
     private final GenericEntry CLIMB_VOLTAGE = Shuffleboard.getTab("Configuration")
-            .add("CLIMB VOLTAGE", 6)
-            .withWidget(BuiltInWidgets.kNumberSlider)
-            .getEntry();
+        .add("CLIMB VOLTAGE", 12)
+        .withWidget(BuiltInWidgets.kNumberSlider)
+        .getEntry();
 
     /**
      * Creates a new Climb.
@@ -67,25 +67,25 @@ public class Climb extends SubsystemBase {
 
         SparkMaxConfig leftConfig = new SparkMaxConfig();
         leftConfig
-                .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(60)
-                .voltageCompensation(12);
+            .idleMode(IdleMode.kBrake)
+            .smartCurrentLimit(60)
+            .voltageCompensation(12);
 
         SparkMaxConfig rightConfig = new SparkMaxConfig();
         rightConfig
-                .idleMode(IdleMode.kBrake)
-                .follow(climbSparkMaxLeft, false)
-                .smartCurrentLimit(60)
-                .voltageCompensation(12);
+            .idleMode(IdleMode.kBrake)
+            .follow(climbSparkMaxLeft, false)
+            .smartCurrentLimit(60)
+            .voltageCompensation(12);
 
         leftConfig.closedLoop
-                .pidf(0.5, 0, 0, 0)
-                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-                .outputRange(-1, 1);
+            .pidf(0.5, 0, 0, 0)
+            .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+            .outputRange(-1, 1);
 
         leftConfig.encoder
-                .positionConversionFactor(1. / CLIMB_RATIO)
-                .velocityConversionFactor(1. / CLIMB_RATIO / 60.);
+            .positionConversionFactor(1. / CLIMB_RATIO)
+            .velocityConversionFactor(1. / CLIMB_RATIO / 60.);
 
         climbSparkMaxLeft.configure(leftConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         climbSparkMaxRight.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
@@ -94,16 +94,16 @@ public class Climb extends SubsystemBase {
 
     public Command setVoltageWithFeedforward(double volts, Drive drive, boolean useIdle) {
         return Commands.run(
-                () -> {
-                    double FF = armFF.calculate(drive.getGyroPitch().getRadians(), 0);
-                    if(useIdle) {
-                        climbSparkMaxLeft.setVoltage(CLIMB_VOLTAGE.getDouble(0) + FF);
-                    } else {
-                        climbSparkMaxLeft.setVoltage(volts + FF);
-                    }
+            () -> {
+                double FF = armFF.calculate(drive.getGyroPitch().getRadians(), 0);
+                if (useIdle) {
+                    climbSparkMaxLeft.setVoltage(CLIMB_VOLTAGE.getDouble(0) + FF);
+                } else {
+                    climbSparkMaxLeft.setVoltage(volts + FF);
+                }
 
-                },
-                this);
+            },
+            this);
     }
 
     public Command fixPIDPositionReference(double currentAngle) { // height or angle
