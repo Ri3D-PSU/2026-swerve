@@ -16,6 +16,7 @@ import org.littletonrobotics.junction.Logger;
 
 import static frc.robot.Constants.SHOOT_ANGLE_RANGE_RAD;
 import static frc.robot.RobotContainer.getControls;
+import static frc.robot.RobotContainer.isRed;
 
 public class ShootWhileMoving extends Command {
     private final Drive drive;
@@ -23,10 +24,13 @@ public class ShootWhileMoving extends Command {
     private final Shooter shooter;
     private final CommandXboxController controller;
 
-    private static final Translation2d TARGET_POS = new Translation2d(
-            Units.inchesToMeters(200.11),
+    private static final Translation2d TARGET_POS_RED = new Translation2d(
+            Units.inchesToMeters(458.56),
             Units.inchesToMeters(158.84));
-    private static final double TIME_DELTA = 0.02;
+
+    private static final Translation2d TARGET_POS_BLUE = new Translation2d(
+            Units.inchesToMeters(181.56),
+            Units.inchesToMeters(158.84));
     private static final double FEEDER_HAS_BALL_CURRENT_THRESHOLD = 30; // TODO tune
     private static final double SHOOT_BOOST_TIME_S = 0.4;
     private double boostTillTime = 0;
@@ -55,22 +59,24 @@ public class ShootWhileMoving extends Command {
         var linearVelocity = robotVelocity.getNorm();
         var linnearAccel = drive.getGyroAcceleration();
         double timeTillStop;
-
         if (linnearAccel < 0.05) {
             timeTillStop = 0.3;
         } else {
             timeTillStop = Math.min(0.3, linearVelocity / linnearAccel);
         }
+
+        Translation2d targetPos = isRed() ? TARGET_POS_RED : TARGET_POS_BLUE;
+
         Translation2d robotShootPosition = robotPositionT0.plus(robotVelocity.times(timeTillStop));
-        Rotation2d targetRotation = TARGET_POS.minus(robotShootPosition).getAngle();
-        double wantedShooterVelocity = getWantedShooterVelocity(TARGET_POS);
+        Rotation2d targetRotation = targetPos.minus(robotShootPosition).getAngle();
+        double wantedShooterVelocity = getWantedShooterVelocity(targetPos);
 
         // Drive Control (Strafing + Aiming)
         // Note: We use the controller inputs for X/Y translation, but override rotation
         var controls = getControls(controller);
         drive.rotationPidDrive(controls.getX(), controls.getY(), targetRotation.getRadians(), 0, 0);
         var robotPose = drive.getPose();
-        var distance = robotPose.getTranslation().getDistance(TARGET_POS);
+        var distance = robotPose.getTranslation().getDistance(targetPos);
 
         // Shooter Control
         double angleError = MathUtil.angleModulus(drive.getPose().getRotation().minus(targetRotation).getRadians());
@@ -101,17 +107,6 @@ public class ShootWhileMoving extends Command {
     @Override
     public void end(boolean interrupted) {
         shooter.setFiring(false);
-    }
-
-    private Translation2d getTargetPosition(Translation2d robotPosition, Translation2d robotVelocity) {
-        Translation2d currentTargetPosition = TARGET_POS;
-        // Simple iterative solver for Time of Flight
-        for (int i = 0; i < 10; i++) {
-            double distance = robotPosition.getDistance(currentTargetPosition);
-            double tof = distance / 4 + 0.7;
-            currentTargetPosition = TARGET_POS.minus(robotVelocity.times(tof));
-        }
-        return currentTargetPosition;
     }
 
     private double getWantedShooterVelocity(Translation2d targetPosition) {
