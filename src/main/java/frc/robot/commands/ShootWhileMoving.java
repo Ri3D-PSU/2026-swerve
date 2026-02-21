@@ -17,7 +17,6 @@ import org.littletonrobotics.junction.Logger;
 import static frc.robot.Constants.SHOOT_ANGLE_RANGE_RAD;
 import static frc.robot.RobotContainer.getControls;
 
-
 public class ShootWhileMoving extends Command {
     private final Drive drive;
     private final Intake intake;
@@ -40,7 +39,6 @@ public class ShootWhileMoving extends Command {
         addRequirements(drive, shooter);
     }
 
-
     @Override
     public void initialize() {
         boostTillTime = 0;
@@ -50,49 +48,37 @@ public class ShootWhileMoving extends Command {
     public void execute() {
 
         // Prediction Math
-        Translation2d robotVelocity = new Translation2d(drive.getFieldRelativeSpeeds().vxMetersPerSecond, drive.getFieldRelativeSpeeds().vyMetersPerSecond);
+        Translation2d robotVelocity = new Translation2d(drive.getFieldRelativeSpeeds().vxMetersPerSecond,
+                drive.getFieldRelativeSpeeds().vyMetersPerSecond);
         Translation2d robotPositionT0 = drive.getPose().getTranslation();
-        Translation2d robotPositionT1 = robotPositionT0.plus(robotVelocity.times(TIME_DELTA));
-        Translation2d robotPositionT2 = robotPositionT0.plus(robotVelocity.times(TIME_DELTA * 2));
 
-        Translation2d targetPositionT0 = getTargetPosition(robotPositionT0, robotVelocity);
-        Translation2d targetPositionT1 = getTargetPosition(robotPositionT1, robotVelocity);
-        Translation2d targetPositionT2 = getTargetPosition(robotPositionT2, robotVelocity);
+        var linearVelocity = robotVelocity.getNorm();
+        var timeTillStop = Math.min(0.3, linearVelocity / drive.getGyroAcceleration());
 
-        Rotation2d targetRotationT0 = targetPositionT0.minus(robotPositionT0).getAngle();
-        Rotation2d targetRotationT1 = targetPositionT1.minus(robotPositionT1).getAngle();
-        Rotation2d targetRotationT2 = targetPositionT2.minus(robotPositionT2).getAngle();
-
-        double rotationRateRadT0 = MathUtil.angleModulus(targetRotationT1.getRadians() - targetRotationT0.getRadians()) / TIME_DELTA;
-        double rotationRateRadT1 = MathUtil.angleModulus(targetRotationT2.getRadians() - targetRotationT1.getRadians()) / TIME_DELTA;
-        double rotationAccel = (rotationRateRadT1 - rotationRateRadT0) / TIME_DELTA;
-
-        double wantedShooterVelocity = getWantedShooterVelocity(targetPositionT0);
+        Translation2d robotShootPosition = robotPositionT0.plus(robotVelocity.times(timeTillStop));
+        Rotation2d targetRotation = TARGET_POS.minus(robotShootPosition).getAngle();
+        double wantedShooterVelocity = getWantedShooterVelocity(TARGET_POS);
 
         // Drive Control (Strafing + Aiming)
         // Note: We use the controller inputs for X/Y translation, but override rotation
         var controls = getControls(controller);
-        drive.rotationPidDrive(controls.getX(), controls.getY(), targetRotationT0.getRadians(), rotationRateRadT0, rotationAccel);
-
+        drive.rotationPidDrive(controls.getX(), controls.getY(), targetRotation.getRadians(), 0, 0);
         var robotPose = drive.getPose();
-        var distance = robotPose.getTranslation().getDistance(targetPositionT0);
+        var distance = robotPose.getTranslation().getDistance(TARGET_POS);
 
         // Shooter Control
-        double angleError = MathUtil.angleModulus(drive.getPose().getRotation().minus(targetRotationT0).getRadians());
+        double angleError = MathUtil.angleModulus(drive.getPose().getRotation().minus(targetRotation).getRadians());
         boolean isAligned = Math.abs(angleError) < SHOOT_ANGLE_RANGE_RAD;
         boolean isAtSpeed = shooter.isAtSpeed(wantedShooterVelocity);
-
 
         if (shooter.getFeederCurrent() > FEEDER_HAS_BALL_CURRENT_THRESHOLD) {
             boostTillTime = Timer.getFPGATimestamp() + SHOOT_BOOST_TIME_S;
         }
 
-
         shooter.setShooterSpeed(wantedShooterVelocity, boostTillTime > Timer.getFPGATimestamp());
 
-        boolean shouldFire = isAligned && isAtSpeed && distance > 2.5;
+        boolean shouldFire = isAligned && isAtSpeed && distance > 2.5 && linearVelocity < 0.1;
         shooter.setFiring(shouldFire);
-
 
         Logger.recordOutput("Shooter/Wanted Velocity", wantedShooterVelocity);
         Logger.recordOutput("Shooter/Angle Error", angleError);
@@ -100,6 +86,10 @@ public class ShootWhileMoving extends Command {
         Logger.recordOutput("Shooter/Is At Speed", isAtSpeed);
         Logger.recordOutput("Shooter/Ready To Fire", shouldFire);
         Logger.recordOutput("Shooter/Distance", distance);
+        Logger.recordOutput("Shooter/timeTillStop", timeTillStop);
+        Logger.recordOutput("Shooter/robotShootPosition", robotShootPosition);
+        Logger.recordOutput("Linear Velocity", linearVelocity);
+        Logger.recordOutput("Linear Acceleration", drive.getGyroAcceleration());
     }
 
     @Override

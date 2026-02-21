@@ -45,15 +45,15 @@ public class Drive extends SubsystemBase {
     private static final double TRACK_WIDTH_X = Units.inchesToMeters(27.0);
     private static final double TRACK_WIDTH_Y = Units.inchesToMeters(27.0);
     private final SwerveDriveKinematics kinematics;
-    private final StructArrayPublisher<SwerveModuleState> moduleStatePublisher = NetworkTableInstance.getDefault().getStructArrayTopic("currentStates", SwerveModuleState.struct).publish();
-    private final StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInstance.getDefault().getStructArrayTopic("desiredStates", SwerveModuleState.struct).publish();
+    private final StructArrayPublisher<SwerveModuleState> moduleStatePublisher = NetworkTableInstance.getDefault()
+            .getStructArrayTopic("currentStates", SwerveModuleState.struct).publish();
+    private final StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInstance.getDefault()
+            .getStructArrayTopic("desiredStates", SwerveModuleState.struct).publish();
     private final AHRS gyro;
-
 
     private final SwerveDrivePoseEstimator poseEstimator;
     private final Field2d field = new Field2d();
     private double lastVisionTimestamp = -1;
-
 
     public Drive() {
         frontLeftModule = new Module(0);
@@ -63,7 +63,7 @@ public class Drive extends SubsystemBase {
 
         gyro = new AHRS(NavXComType.kMXP_SPI);
 
-        Translation2d[] moduleLocations = new Translation2d[]{
+        Translation2d[] moduleLocations = new Translation2d[] {
                 new Translation2d(TRACK_WIDTH_X / 2, TRACK_WIDTH_Y / 2),
                 new Translation2d(TRACK_WIDTH_X / 2, -TRACK_WIDTH_Y / 2),
                 new Translation2d(-TRACK_WIDTH_X / 2, TRACK_WIDTH_Y / 2),
@@ -71,7 +71,8 @@ public class Drive extends SubsystemBase {
         };
 
         kinematics = new SwerveDriveKinematics(moduleLocations);
-        poseEstimator = new SwerveDrivePoseEstimator(kinematics, gyro.getRotation2d(), getModulePositions(), new Pose2d());
+        poseEstimator = new SwerveDrivePoseEstimator(kinematics, gyro.getRotation2d(), getModulePositions(),
+                new Pose2d());
 
         RobotConfig config;
         try {
@@ -86,14 +87,18 @@ public class Drive extends SubsystemBase {
                 this::getPose, // Robot pose supplier
                 this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
                 this::getRobotRelativeSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-                (speeds, feedforwards) -> drive(speeds), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
-                new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
+                (speeds, feedforwards) -> drive(speeds), // Method that will drive the robot given ROBOT RELATIVE
+                                                         // ChassisSpeeds. Also optionally outputs individual module
+                                                         // feedforwards
+                new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for
+                                                // holonomic drive trains
                         new PIDConstants(10.0, 0.0, 0.0), // Translation PID constants
                         new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
                 ),
                 config, // The robot configuration
                 () -> {
-                    // Boolean supplier that controls when the path will be mirrored for the red alliance
+                    // Boolean supplier that controls when the path will be mirrored for the red
+                    // alliance
                     // This will flip the path being followed to the red side of the field.
                     // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
 
@@ -104,7 +109,6 @@ public class Drive extends SubsystemBase {
         );
 
     }
-
 
     private double lastAngularVelocity = 0.0;
     private double lastLogTime = 0.0;
@@ -118,13 +122,13 @@ public class Drive extends SubsystemBase {
         Logger.recordOutput("Gyro Rotation", gyro.getRotation2d());
         poseEstimator.update(gyro.getRotation2d(), getModulePositions());
 
-
         // Needed for doing megatag2
         LimelightHelpers.SetRobotOrientation(LIMELIGHT_NAME, getGyroRotation().getDegrees(), 0, 0, 0, 0, 0);
         var megaTag2VisionPose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(LIMELIGHT_NAME);
         var megaTag1VisionPose = LimelightHelpers.getBotPoseEstimate_wpiBlue(LIMELIGHT_NAME);
 
-        if (megaTag2VisionPose != null && megaTag1VisionPose != null && megaTag2VisionPose.timestampSeconds != lastVisionTimestamp && megaTag2VisionPose.tagCount > 0) {
+        if (megaTag2VisionPose != null && megaTag1VisionPose != null
+                && megaTag2VisionPose.timestampSeconds != lastVisionTimestamp && megaTag2VisionPose.tagCount > 0) {
             lastVisionTimestamp = megaTag2VisionPose.timestampSeconds;
             Logger.recordOutput("LimelightPose", megaTag2VisionPose.pose);
             var visionStd = calculateVisionStd(megaTag2VisionPose);
@@ -134,8 +138,7 @@ public class Drive extends SubsystemBase {
                 // let's use the megatag1 rotation to update our gyro angle
                 newVisionPose = new Pose2d(
                         megaTag2VisionPose.pose.getTranslation(),
-                        megaTag1VisionPose.pose.getRotation()
-                );
+                        megaTag1VisionPose.pose.getRotation());
             }
             poseEstimator.addVisionMeasurement(newVisionPose, megaTag2VisionPose.timestampSeconds, visionStd);
 
@@ -149,10 +152,8 @@ public class Drive extends SubsystemBase {
         Logger.recordOutput("Gyro/Roll", getGyroRoll());
         Logger.recordOutput("Gyro/Pitch", getGyroPitch());
 
-
         field.setRobotPose(poseEstimator.getEstimatedPosition()); // Logs the position for advantagekit
     }
-
 
     /**
      * @param speeds robot relative speeds
@@ -160,7 +161,8 @@ public class Drive extends SubsystemBase {
     public void drive(ChassisSpeeds speeds) {
         speeds = ChassisSpeeds.discretize(speeds, TICK_TIME);
         SwerveModuleState[] states = kinematics.toSwerveModuleStates(speeds);
-        boolean shouldTurn = Math.abs(speeds.vyMetersPerSecond) + Math.abs(speeds.vxMetersPerSecond) + Math.abs(speeds.omegaRadiansPerSecond) > 0.0;
+        boolean shouldTurn = Math.abs(speeds.vyMetersPerSecond) + Math.abs(speeds.vxMetersPerSecond)
+                + Math.abs(speeds.omegaRadiansPerSecond) > 0.0;
         frontLeftModule.setDesiredState(states[0], shouldTurn);
         frontRightModule.setDesiredState(states[1], shouldTurn);
         backLeftModule.setDesiredState(states[2], shouldTurn);
@@ -182,13 +184,13 @@ public class Drive extends SubsystemBase {
     public void rotationPidDrive(double x, double y, double angle, double angularVelocity, double angularAcceleration) {
         double kV = 1.04935;
         double kA = 0.0;
-        var thetaSpeed = positionRotationPid.calculate(getPose().getRotation().getRadians(), angle) + angularVelocity * kV + angularAcceleration * kA;
+        var thetaSpeed = positionRotationPid.calculate(getPose().getRotation().getRadians(), angle)
+                + angularVelocity * kV + angularAcceleration * kA;
         drive(ChassisSpeeds.fromFieldRelativeSpeeds(x, y, thetaSpeed, getGyroRotation()));
     }
 
-
     public SwerveModulePosition[] getModulePositions() {
-        return new SwerveModulePosition[]{
+        return new SwerveModulePosition[] {
                 frontLeftModule.getPosition(),
                 frontRightModule.getPosition(),
                 backLeftModule.getPosition(),
@@ -197,7 +199,7 @@ public class Drive extends SubsystemBase {
     }
 
     public SwerveModuleState[] getSwerveModuleStates() {
-        return new SwerveModuleState[]{
+        return new SwerveModuleState[] {
                 frontLeftModule.getState(),
                 frontRightModule.getState(),
                 backLeftModule.getState(),
@@ -205,9 +207,14 @@ public class Drive extends SubsystemBase {
         };
     }
 
-
     public Rotation2d getGyroRotation() {
         return poseEstimator.getEstimatedPosition().getRotation();
+    }
+
+    public double getGyroAcceleration() {
+        var x = gyro.getWorldLinearAccelX();
+        var y = gyro.getWorldLinearAccelY();
+        return Math.sqrt(x * x + y * y);
     }
 
     public Rotation2d getGyroRoll() {
@@ -234,7 +241,6 @@ public class Drive extends SubsystemBase {
 
     PIDController positionRotationPid = new PIDController(5.0, 0.0, 0.5);
 
-
     {
         positionRotationPid.enableContinuousInput(0, Units.degreesToRadians(360.0));
         SmartDashboard.putData("Position rotation pid", positionRotationPid);
@@ -246,19 +252,19 @@ public class Drive extends SubsystemBase {
                 () -> drive(
                         positionTranslationPid.calculate(getPose().getX(), goal.getX()),
                         positionTranslationPid.calculate(getPose().getY(), goal.getY()),
-                        positionRotationPid.calculate(getPose().getRotation().getRadians(), goal.getRotation().getRadians()),
-                        true
-                ),
-                this
-        );
+                        positionRotationPid.calculate(getPose().getRotation().getRadians(),
+                                goal.getRotation().getRadians()),
+                        true),
+                this);
     }
-
 
     /**
      * Precondition: visionPose.rawFiducials.length > 0
      *
      * @param visionPose
-     * @return Standard deviations of the vision pose measurement (x position in meters, y position in meters, and heading in radians). Increase these numbers to trust the vision pose measurement less.
+     * @return Standard deviations of the vision pose measurement (x position in
+     *         meters, y position in meters, and heading in radians). Increase these
+     *         numbers to trust the vision pose measurement less.
      */
     private Matrix<N3, N1> calculateVisionStd(LimelightHelpers.PoseEstimate visionPose) {
 
@@ -281,7 +287,7 @@ public class Drive extends SubsystemBase {
 
         var positionStd = 0.3 * Math.log(closestTag.distToCamera) * (1 + rotationRate * 2);
 
-        return new Matrix<>(Nat.N3(), Nat.N1(), new double[]{positionStd, positionStd, rotationStd});
+        return new Matrix<>(Nat.N3(), Nat.N1(), new double[] { positionStd, positionStd, rotationStd });
     }
 
     public void setBrakeMode(SparkBaseConfig.IdleMode idleMode) {
@@ -296,8 +302,10 @@ public class Drive extends SubsystemBase {
     }
 
     public boolean shouldBumpAdjust() {
-        var futurePos = getPose().getTranslation().plus(new Translation2d(getFieldRelativeSpeeds().vxMetersPerSecond * 0.5, getFieldRelativeSpeeds().vyMetersPerSecond * 0.5));
-        return (Utils.isPointInBox(futurePos, new Translation2d(158.61, 62.35), new Translation2d(205.61, 135.35))) && Timer.getFPGATimestamp() - lastVisionTimestamp < 1.0;
+        var futurePos = getPose().getTranslation().plus(new Translation2d(
+                getFieldRelativeSpeeds().vxMetersPerSecond * 0.5, getFieldRelativeSpeeds().vyMetersPerSecond * 0.5));
+        return (Utils.isPointInBox(futurePos, new Translation2d(158.61, 62.35), new Translation2d(205.61, 135.35)))
+                && Timer.getFPGATimestamp() - lastVisionTimestamp < 1.0;
     }
 
     public double closestBumpAngle() {
